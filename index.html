@@ -332,9 +332,30 @@
 <script>
   // PWA: service worker রেজিস্টার করা, যাতে "Add to Home Screen" কাজ করে
   // এবং সাইট ইনস্টলযোগ্য হয়। ব্রাউজার সাপোর্ট না করলেও এটা নিরাপদে এড়িয়ে যাবে।
+  //
+  // FIX: a service worker's job is to cache files so the app works offline —
+  // but that's exactly why, every time we upload a new index.html, phones
+  // that already installed this app (or even just visited it in the browser)
+  // kept showing the OLD cached version, no matter how many real fixes went
+  // into the file. Below we now (1) explicitly ask the browser to check the
+  // network for a newer service-worker.js instead of trusting the cached
+  // one, and (2) auto-reload the page exactly once when a newer version
+  // finishes taking over, so updates actually reach people instead of
+  // silently sitting there un-applied.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js').catch((err) => {
+      navigator.serviceWorker.register('/service-worker.js').then((reg) => {
+        reg.update();
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if(!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if(newWorker.state === 'activated' && navigator.serviceWorker.controller){
+              location.reload();
+            }
+          });
+        });
+      }).catch((err) => {
         console.warn('Service worker registration failed:', err);
       });
     });
