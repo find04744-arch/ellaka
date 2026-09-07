@@ -2442,7 +2442,32 @@
     `;
   }
 
+  // render() below is a safety wrapper around renderUnsafe(): if any screen throws a bug,
+  // thousands of live users see a friendly "reload" message instead of a permanently
+  // blank/frozen page (this is what happened with the missing filterComboHtml bug).
   function render(){
+    try{
+      renderUnsafe();
+    }catch(err){
+      console.error('Render error:', err);
+      if(state.tab !== 'home'){
+        // most bugs are specific to one tab — try recovering by going back to Home first
+        state.tab = 'home';
+        try{ renderUnsafe(); return; }catch(err2){ console.error('Render error on fallback:', err2); }
+      }
+      const app = document.getElementById('elk-app');
+      if(app){
+        app.innerHTML = `
+          <div style="padding:60px 24px; text-align:center; font-family:sans-serif;">
+            <div style="font-size:42px; margin-bottom:12px;">😕</div>
+            <div style="font-size:16px; font-weight:700; margin-bottom:8px; color:#163832;">কিছু একটা সমস্যা হয়েছে</div>
+            <div style="font-size:13.5px; color:#77705f; margin-bottom:22px; line-height:1.6;">দুঃখিত, একটা টেকনিক্যাল সমস্যা হয়েছে।<br>পেজটা রিলোড করলে সাধারণত ঠিক হয়ে যায়।</div>
+            <button onclick="location.reload()" style="padding:13px 30px; border-radius:12px; border:none; background:#163832; color:#fff; font-weight:700; font-size:14.5px; cursor:pointer;">রিলোড করুন</button>
+          </div>`;
+      }
+    }
+  }
+  function renderUnsafe(){
     const app = document.getElementById('elk-app');
     if(!state.loaded){ app.innerHTML = `<div class="elk-loading">${t('loading')}</div>`; return; }
     if(!state.session){
