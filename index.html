@@ -151,6 +151,8 @@
   .elk-call-btn{flex:none; align-self:center; background:var(--marigold); color:#3A2500; border:none; border-radius:var(--radius-sm); padding:8px 14px; font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap; box-shadow:0 2px 8px rgba(184,122,30,.35); transition:transform .1s, box-shadow .15s;}
   .elk-call-btn:active{transform:scale(.95); box-shadow:0 1px 4px rgba(184,122,30,.35);}
   .elk-empty{text-align:center; padding:48px 24px; color:var(--muted); font-size:13.5px; line-height:1.7;}
+  .elk-load-fail{display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(181,75,50,.1); border:1px solid var(--red); border-radius:var(--radius-sm); padding:11px 14px; margin:0 0 14px; font-size:12.5px; color:var(--red); line-height:1.5;}
+  .elk-load-fail button{flex:none; background:var(--red); color:#fff; border:none; border-radius:20px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;}
 
   /* ---------- forms ---------- */
   .elk-field{margin-bottom:18px;}
@@ -512,6 +514,8 @@
       confirmDeleteDonor:"এই ডোনার মুছে ফেলতে চান?",
       toastUpdated:"তালিকা আপডেট হয়েছে।",
       toastRefreshFailed:"রিফ্রেশ করা যায়নি, ইন্টারনেট চেক করুন।",
+      dataLoadFailedMsg:"তালিকা লোড করা যায়নি। ইন্টারনেট চেক করে আবার চেষ্টা করুন।",
+      retryBtn:"আবার চেষ্টা করুন",
       toastBackupDownloaded:"ব্যাকআপ ফাইল ডাউনলোড হয়েছে।",
       toastBadBackupFormat:"এই লেখাটা সঠিক ব্যাকআপ ফরম্যাটে নেই।",
       toastUnknownFile:"এই ফাইলটা চেনা যাচ্ছে না।",
@@ -738,6 +742,8 @@
       confirmDeleteDonor:"Delete this donor?",
       toastUpdated:"List updated.",
       toastRefreshFailed:"Couldn't refresh, please check your internet.",
+      dataLoadFailedMsg:"Couldn't load listings. Check your internet and try again.",
+      retryBtn:"Retry",
       toastBackupDownloaded:"Backup file downloaded.",
       toastBadBackupFormat:"This text isn't in a valid backup format.",
       toastUnknownFile:"This file isn't recognized.",
@@ -902,7 +908,7 @@
   let state = {
     tab:"home", loaded:false, theme:"light", lang:"bn", i18nCache:{}, translating:false,
     session:null, authMode:"login", authError:"", authBusy:false, authInfo:"",
-    listings:[], areas:[], donors:[],
+    listings:[], areas:[], donors:[], dataLoadFailed:false, everLoadedListings:false,
     security:{failedAttempts:0, locked:false},
     countryFilter:"সব", districtFilter:"সব", areaFilter:"সব", catFilter:"all",
     myRatings:{},
@@ -1766,6 +1772,7 @@
     return `
     ${renderHeader(t('appTitle'), t('appTagline'), {locationStrip:locStrip})}
     <div class="elk-content">
+      ${state.dataLoadFailed ? `<div class="elk-load-fail"><span>⚠️ ${t('dataLoadFailedMsg')}</span><button type="button" id="elk-retry-load">${t('retryBtn')}</button></div>` : ''}
       <div class="elk-chiprow" id="elk-cat-chips">
         <div class="elk-chip ${state.catFilter==='all'?'active':''}" data-cat="all">${t('allCatsChip')}</div>
         ${Object.entries(CATS).map(([k,v])=>`<div class="elk-chip ${state.catFilter===k?'active':''}" data-cat="${k}">${v.icon} ${escapeHtml(catLabel(k))}</div>`).join('')}
@@ -2675,9 +2682,25 @@
   async function refreshData(silent){
     try{
       // pull the latest shared data so changes made on ANY phone show up
-      // here automatically, without the user reinstalling anything
-      const { data: listingRows } = await sb.from('listings').select('*, products(*)').order('created_at', {ascending:false});
+      // here automatically, without the user reinstalling anything.
+      // NOTE: supabase-js does NOT throw on a query error (bad table access,
+      // RLS block, missing column, etc.) — it just resolves with {data:null,
+      // error:{...}}. Previously we ignored `error` entirely, so a broken
+      // query silently produced an empty listings array with no visible sign
+      // anything was wrong — the home page just looked "stuck" with no cards
+      // below the category chips. We now check `error` on the listings call
+      // specifically and surface a retry banner instead of failing silently.
+      const { data: listingRows, error: listingsErr } = await sb.from('listings').select('*, products(*)').order('created_at', {ascending:false});
+      if(listingsErr){
+        console.error('listings fetch error:', listingsErr);
+        state.dataLoadFailed = true;
+        render();
+        if(!silent) toast(t('toastRefreshFailed'));
+        return;
+      }
       state.listings = (listingRows||[]).map(listingRowToObj);
+      state.dataLoadFailed = false;
+      state.everLoadedListings = true;
       try{
         const { data: allRatings } = await sb.from('ratings').select('listing_id, stars');
         const byListing = {};
@@ -2694,7 +2717,12 @@
       state.blocks = (blockRows||[]).map(b=>({blocker:b.blocker_id, blocked:b.blocked_id}));
       render();
       if(!silent) toast(t('toastUpdated'));
-    }catch(e){ if(!silent) toast(t('toastRefreshFailed')); }
+    }catch(e){
+      console.error('refreshData error:', e);
+      state.dataLoadFailed = true;
+      render();
+      if(!silent) toast(t('toastRefreshFailed'));
+    }
   }
 
   function exportBackup(){
@@ -2725,6 +2753,8 @@
 
     const refreshBtn = document.getElementById('elk-refresh-btn');
     if(refreshBtn) refreshBtn.onclick = ()=> refreshData(false);
+    const retryLoadBtn = document.getElementById('elk-retry-load');
+    if(retryLoadBtn) retryLoadBtn.onclick = ()=> refreshData(false);
 
     const exportBtn = document.getElementById('elk-export-btn');
     if(exportBtn) exportBtn.onclick = exportBackup;
