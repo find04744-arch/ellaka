@@ -40,7 +40,7 @@
     --shadow-lg:0 14px 34px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0; overscroll-behavior-y:contain;}
+  html,body{margin:0; overscroll-behavior-y:contain; overflow-x:hidden;}
   #ellaka-root{
     font-family:'Hind Siliguri', sans-serif;
     background:
@@ -58,7 +58,13 @@
   #ellaka-root button, #ellaka-root select, #ellaka-root input, #ellaka-root textarea{font-family:inherit;}
 
   /* ---------- top bar ---------- */
-  .elk-topbar{background:linear-gradient(160deg, var(--header) 0%, var(--header-soft) 145%); color:#FBF6E9; padding:20px 18px 18px; position:relative; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.08);}
+  /* overflow used to be hidden here to clip the decorative ::after blob, but that
+     also clipped the দেশ/জেলা/এলাকা dropdown lists inside .elk-location-strip —
+     tapping them opened a list with real height, but it got squashed invisible
+     against this box's own edge, which is what looked like "the list goes inside
+     itself". The blob is faint enough that letting it bleed slightly past the
+     header is a non-issue, so overflow is visible now. */
+  .elk-topbar{background:linear-gradient(160deg, var(--header) 0%, var(--header-soft) 145%); color:#FBF6E9; padding:20px 18px 18px; position:relative; overflow:visible; box-shadow:0 1px 0 rgba(0,0,0,.08);}
   .elk-topbar::after{content:"";position:absolute;right:-40px;top:-50px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle, var(--header-soft) 0%, transparent 72%);opacity:.7;}
   .elk-topbar-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; position:relative; z-index:1;}
   .elk-brand{display:flex; align-items:baseline; gap:8px;}
@@ -597,6 +603,7 @@
       jobTitleLabel:"পদের নাম / কাজের ধরন", jobTitlePlaceholder:"যেমন: দোকান সহকারী, ডেলিভারি ম্যান, রাঁধুনি",
       jobPayLabel:"বেতন/পারিশ্রমিক (ঐচ্ছিক)", jobPayPlaceholder:"যেমন: মাসিক ৮,০০০ টাকা",
       jobDescLabel:"বিস্তারিত", jobDescPlaceholder:"কাজের সময়, অভিজ্ঞতা লাগবে কিনা, শর্ত ইত্যাদি লিখুন",
+      jobDescLabelSeeking:"নিজের সম্পর্কে বলুন", jobDescPlaceholderSeeking:"আপনার অভিজ্ঞতা, দক্ষতা, কী ধরনের কাজ খুঁজছেন ইত্যাদি লিখুন",
       postJobBtn:"✅ পোস্ট করুন", noJobs:"এখনো কোনো কাজের পোস্ট নেই।",
       jobsEmptyFilterMsg:"এই ফিল্টারে কোনো পোস্ট নেই।",
       hiringBadge:"🧑‍💼 কর্মী দরকার", seekingBadge:"🙋 কাজ খুঁজছেন",
@@ -822,6 +829,7 @@
       jobTitleLabel:"Position / type of work", jobTitlePlaceholder:"e.g. Shop assistant, delivery man, cook",
       jobPayLabel:"Pay/wage (optional)", jobPayPlaceholder:"e.g. 8,000 taka/month",
       jobDescLabel:"Details", jobDescPlaceholder:"Working hours, experience needed, conditions, etc.",
+      jobDescLabelSeeking:"Tell us about yourself", jobDescPlaceholderSeeking:"Your experience, skills, what kind of work you're looking for, etc.",
       postJobBtn:"✅ Post", noJobs:"No job posts yet.",
       jobsEmptyFilterMsg:"No posts match this filter.",
       hiringBadge:"🧑‍💼 Hiring", seekingBadge:"🙋 Looking for work",
@@ -1062,12 +1070,14 @@
   function jobRowToObj(row){
     return { id: row.id, ownerDeviceId: row.owner_id, postType: row.post_type, name: row.name, title: row.title,
       country: row.country, district: row.district, area: row.area, pay: row.pay, description: row.description,
+      cvUrl: row.cv_url||'', cvFileName: row.cv_file_name||'',
       phone: row.phone, whatsapp: row.whatsapp,
       createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now() };
   }
   function jobObjToRow(data){
     return { post_type: data.postType, name: data.name, title: data.title,
       country: data.country, district: data.district, area: data.area, pay: data.pay, description: data.description,
+      cv_url: data.cvUrl||'', cv_file_name: data.cvFileName||'',
       phone: data.phone, whatsapp: data.whatsapp };
   }
 
@@ -1579,10 +1589,26 @@
   function localKeywordSearch(q){
     q = q.trim().toLowerCase();
     if(!q) return [];
+    const qWords = q.split(/\s+/).filter(Boolean);
     return visibleListings().map(l=>{
       const productCaptions = (l.products||[]).map(p=>p.caption||'').join(' ');
-      const hay = (l.name+" "+l.description+" "+catLabel(l.category)+" "+(l.subjects||"")+" "+productCaptions).toLowerCase();
-      let score=0; q.split(/\s+/).forEach(w=>{ if(w && hay.includes(w)) score++; });
+      // include blood group, location (country/district/area) and skills in the
+      // searchable text too, so queries like "O+ blood lagbe uttorar" match a
+      // donor whose bloodGroup/area fields hold that info, not just name/desc.
+      const hay = (l.name+" "+l.description+" "+catLabel(l.category)+" "+(l.subjects||"")+" "+productCaptions
+        +" "+(l.bloodGroup||"")+" "+(l.country||"")+" "+(l.district||"")+" "+(l.area||"")+" "+(l.skills||"")).toLowerCase();
+      const hayTokens = hay.split(/[\s,]+/).filter(Boolean);
+      let score=0;
+      qWords.forEach(w=>{
+        if(!w) return;
+        if(hay.includes(w)){ score++; return; }
+        // loose match for Bangla transliteration suffixes, e.g. "uttorar"
+        // (uttora + Bangla possessive "র") should still match area "uttora".
+        if(w.length>=3){
+          const stem = w.slice(0, Math.max(3, w.length-2));
+          if(hayTokens.some(tok=> tok.length>=3 && (tok.startsWith(stem) || stem.startsWith(tok.slice(0, Math.max(3, tok.length-2)))))) score++;
+        }
+      });
       return {l, score};
     }).filter(x=>x.score>0).sort((a,b)=> b.score-a.score || avgRating(b.l)-avgRating(a.l)).map(x=>x.l);
   }
@@ -1891,6 +1917,7 @@
         <div class="elk-row-area">${j.postType==='hiring'?t('hiringBadge'):t('seekingBadge')}${locLine? ' · '+locLine : ''}</div>
         ${j.pay ? `<div class="elk-row-price">${t('jobPayLabel')}: ${escapeHtml(j.pay)}</div>` : ''}
         ${j.description ? `<div class="elk-row-area" style="margin-top:4px;">${escapeHtml(j.description)}</div>` : ''}
+        ${j.postType==='seeking' && j.cvUrl ? `<a class="elk-ghost-btn" style="margin-top:8px;" href="${escapeHtml(j.cvUrl)}" target="_blank" rel="noopener" download="${escapeHtml(j.cvFileName||'CV')}">${t('viewCvBtn')}</a>` : ''}
         ${mine ? `<div class="elk-admin-row-actions" style="margin-top:8px;">
             <button data-edit-job="${j.id}">${t('editBtn')}</button>
             <button class="del" data-del-job="${j.id}">${t('deleteBtn')}</button>
@@ -1904,7 +1931,8 @@
   }
   function renderJobFormView(){
     const editing = state.editingJobId ? state.jobs.find(x=>x.id===state.editingJobId && x.ownerDeviceId===state.deviceId) : null;
-    const j = editing || {postType:'hiring', name:'', title:'', description:'', pay:'', phone:'', whatsapp:'', country:'', district:'', area:''};
+    const j = editing || {postType:'hiring', name:'', title:'', description:'', pay:'', phone:'', whatsapp:'', country:'', district:'', area:'', cvUrl:'', cvFileName:''};
+    const isSeeking = j.postType==='seeking';
     return `
       <span class="elk-back-link" id="elk-work-back">${t('backToWork')}</span>
       <h3 style="font-size:16px;margin-bottom:10px;">${editing? t('editJobTitle') : t('newJobTitle')}</h3>
@@ -1918,8 +1946,17 @@
         <div class="elk-field"><label>${t('posterNameLabel')}</label><input name="name" required value="${escapeHtml(j.name||'')}" placeholder="${t('posterNamePlaceholder')}"></div>
         <div class="elk-field"><label>${t('jobTitleLabel')}</label><input name="title" required value="${escapeHtml(j.title)}" placeholder="${t('jobTitlePlaceholder')}"></div>
         ${locationFieldsHtml('elk-job', j, true)}
-        <div class="elk-field"><label>${t('jobPayLabel')}</label><input name="pay" value="${escapeHtml(j.pay||'')}" placeholder="${t('jobPayPlaceholder')}"></div>
-        <div class="elk-field"><label>${t('jobDescLabel')}</label><textarea name="description" placeholder="${t('jobDescPlaceholder')}">${escapeHtml(j.description||'')}</textarea></div>
+        <div class="elk-field" id="elk-job-pay-field" style="${isSeeking?'display:none;':''}"><label>${t('jobPayLabel')}</label><input name="pay" value="${escapeHtml(j.pay||'')}" placeholder="${t('jobPayPlaceholder')}"></div>
+        <div class="elk-field"><label id="elk-job-desc-label">${isSeeking? t('jobDescLabelSeeking') : t('jobDescLabel')}</label><textarea name="description" id="elk-job-desc-input" placeholder="${isSeeking? t('jobDescPlaceholderSeeking') : t('jobDescPlaceholder')}">${escapeHtml(j.description||'')}</textarea></div>
+        <div class="elk-field" id="elk-job-cv-field" style="${isSeeking?'':'display:none;'}">
+          <label>${t('cvLabel')}</label>
+          <input type="hidden" name="cvUrl" id="elk-job-cv-hidden" value="${escapeHtml(j.cvUrl||'')}">
+          <input type="hidden" name="cvFileName" id="elk-job-cv-filename-hidden" value="${escapeHtml(j.cvFileName||'')}">
+          <input type="file" accept="application/pdf,image/*" id="elk-job-cv-file" style="display:none;">
+          <button type="button" class="elk-ghost-btn" style="margin-top:0;" id="elk-job-cv-pick-btn">${t('chooseCvBtn')}</button>
+          <div class="hint" id="elk-job-cv-filename">${j.cvFileName ? t('cvSelectedPrefix')+escapeHtml(j.cvFileName) : ''}</div>
+          <div class="hint">${t('cvUploadHint')}</div>
+        </div>
         <div class="elk-field"><label>${t('phoneLabel')}</label><input name="phone" required type="tel" value="${escapeHtml(j.phone||'')}"></div>
         <div class="elk-field"><label>${t('whatsappLabel')}</label><input name="whatsapp" type="tel" value="${escapeHtml(j.whatsapp||'')}" placeholder="${t('whatsappPlaceholder')}"></div>
         <button type="submit" class="elk-submit-btn">${editing? t('saveChanges') : t('postJobBtn')}</button>
@@ -2008,8 +2045,8 @@
         ${l.mapQuery ? `<div class="elk-section-sub" style="margin-top:14px;">${t('viewMapBtn')}</div>
           <iframe class="elk-map-embed" src="${escapeHtml(mapEmbedUrl(l.mapQuery))}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           <a class="elk-ghost-btn" style="margin-top:8px;" href="${escapeHtml(mapOpenUrl(l.mapQuery))}" target="_blank" rel="noopener">${t('viewMapBtn')}</a>` : ''}
-        ${renderProductsGallery(l)}
-        ${renderProductSearchBox(l)}
+        ${!isPersonCat ? renderProductsGallery(l) : ''}
+        ${!isPersonCat ? renderProductSearchBox(l) : ''}
         ${blockedPair ? `<div class="elk-warn-banner">${t('profileBlockedNotice')}</div>` : `
         <div class="elk-call-safety-note">${t('safetyWarning')}</div>
         ${l.phone ? `<div class="elk-contact-row" style="margin-top:8px;">
@@ -2526,17 +2563,20 @@
           const cat = CATS[l.category]||CATS.other;
           const hasLoc = l.area && l.district && l.country;
           const locLine = hasLoc ? `${escapeHtml(l.area)}, ${escapeHtml(l.district)}, ${escapeHtml(l.country)}` : '';
+          // donor/worker/teacher are people, not shops — no products to add and no
+          // product-demand list to show, so those two buttons are skipped for them.
+          const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher');
           return `<div style="border-bottom:1px solid var(--line); padding:12px 2px;">
             <div class="elk-row-name">${cat.icon} ${escapeHtml(l.name)}</div>
             <div class="elk-row-area">${escapeHtml(catLabel(l.category))}${locLine? ' · '+locLine : ''}</div>
-            ${l.bizType==='online' ? `<span class="elk-badge-online">${t('onlineBadge')}</span>` : (hasLoc ? `<span class="elk-badge-physical">${t('physicalBadge')}</span>` : '')}
+            ${!isPersonCat ? (l.bizType==='online' ? `<span class="elk-badge-online">${t('onlineBadge')}</span>` : (hasLoc ? `<span class="elk-badge-physical">${t('physicalBadge')}</span>` : '')) : ''}
             <div class="elk-admin-row-actions">
               <button data-edit-my-listing="${l.id}">${t('editBtn')}</button>
-              <button data-products-my-listing="${l.id}">${isStayCat(l.category) ? t('roomsBtnShort') : t('addProductsBtn')}</button>
+              ${!isPersonCat ? `<button data-products-my-listing="${l.id}">${isStayCat(l.category) ? t('roomsBtnShort') : t('addProductsBtn')}</button>` : ''}
             </div>
             <div class="elk-admin-row-actions" style="margin-top:8px;">
               <button data-chats-my-listing="${l.id}">${t('viewChatsBtn')}</button>
-              <button data-demand-my-listing="${l.id}">${t('viewDemandBtn')}</button>
+              ${!isPersonCat ? `<button data-demand-my-listing="${l.id}">${t('viewDemandBtn')}</button>` : ''}
             </div>
             <div class="elk-admin-row-actions" style="margin-top:8px;">
               <button class="del" data-del-my-listing="${l.id}">${t('deleteBtn')}</button>
@@ -2980,6 +3020,47 @@
       };
     });
     bindCascadingLocation('elk-job');
+    // job-seeker vs employer posts need different fields: a salary field makes
+    // sense for someone hiring, not much for someone looking for work — and a
+    // job-seeker gets a CV upload + an "about yourself" framing on the same
+    // description box instead.
+    const jobPostTypeRadios = document.querySelectorAll('#elk-job-form input[name="postType"]');
+    if(jobPostTypeRadios.length){
+      const payField = document.getElementById('elk-job-pay-field');
+      const cvField = document.getElementById('elk-job-cv-field');
+      const descLabel = document.getElementById('elk-job-desc-label');
+      const descInput = document.getElementById('elk-job-desc-input');
+      jobPostTypeRadios.forEach(r=>{
+        r.onchange = ()=>{
+          const seeking = r.value==='seeking' && r.checked;
+          if(payField) payField.style.display = seeking ? 'none' : '';
+          if(cvField) cvField.style.display = seeking ? '' : 'none';
+          if(descLabel) descLabel.textContent = seeking ? t('jobDescLabelSeeking') : t('jobDescLabel');
+          if(descInput) descInput.placeholder = seeking ? t('jobDescPlaceholderSeeking') : t('jobDescPlaceholder');
+        };
+      });
+    }
+    const jobCvPickBtn = document.getElementById('elk-job-cv-pick-btn');
+    const jobCvFileInput = document.getElementById('elk-job-cv-file');
+    if(jobCvPickBtn && jobCvFileInput){
+      jobCvPickBtn.onclick = ()=> jobCvFileInput.click();
+      jobCvFileInput.onchange = async ()=>{
+        const file = jobCvFileInput.files && jobCvFileInput.files[0];
+        if(!file) return;
+        if(file.size > 2*1024*1024){ toast(t('fileTooLargeToast')); jobCvFileInput.value=''; return; }
+        const nameElBusy = document.getElementById('elk-job-cv-filename');
+        if(nameElBusy) nameElBusy.textContent = '⏳ আপলোড হচ্ছে...';
+        try{
+          const url = await fileToUploadedRawUrl(file, 'cvs');
+          const hidden = document.getElementById('elk-job-cv-hidden');
+          const nameHidden = document.getElementById('elk-job-cv-filename-hidden');
+          const nameEl = document.getElementById('elk-job-cv-filename');
+          if(hidden) hidden.value = url;
+          if(nameHidden) nameHidden.value = file.name;
+          if(nameEl) nameEl.textContent = t('cvSelectedPrefix') + file.name;
+        }catch(e){ toast(t('toastFillRequired')); if(nameElBusy) nameElBusy.textContent = ''; }
+      };
+    }
     const jobForm = document.getElementById('elk-job-form');
     if(jobForm){
       jobForm.onsubmit = async (e)=>{
@@ -2991,6 +3072,7 @@
           title:(fd.get('title')||'').trim(),
           country:(fd.get('country')||'').trim(), district:(fd.get('district')||'').trim(), area:(fd.get('area')||'').trim(),
           pay:(fd.get('pay')||'').trim(), description:(fd.get('description')||'').trim(),
+          cvUrl:(fd.get('cvUrl')||'').trim(), cvFileName:(fd.get('cvFileName')||'').trim(),
           phone:(fd.get('phone')||'').trim(), whatsapp:(fd.get('whatsapp')||'').trim(),
         };
         if(!data.name || !data.title || !data.phone){ toast(t('toastFillRequired')); return; }
@@ -3165,12 +3247,22 @@
           }
         }catch(err){ toast(t('toastRefreshFailed')); return; }
         if(data.country && data.district && data.area) registerLocation(data.country, data.district, data.area);
-        if(newListingId){
-          // fresh profile: go straight into "Products & Videos" so the person can
-          // immediately post photos/videos buyers will see on their profile.
+        // Donor/worker/teacher profiles are people, not shops — they don't sell
+        // products, so there's nothing useful in the "Products & Videos" screen
+        // for them. Sending them there anyway is what made creating a donor
+        // profile look like it was dumping them into "My Business". Only real
+        // shop/service listings get routed into that screen.
+        const isPersonCat = (data.category==='worker' || data.category==='donor' || data.category==='teacher');
+        if(newListingId && !isPersonCat){
+          // fresh shop/service profile: go straight into "Products & Videos" so
+          // the person can immediately post photos/videos buyers will see.
           state.myShopView='products'; state.productListingId=newListingId; state.editingProductId=null;
         } else {
           state.myShopView='list';
+          // a brand-new donor profile almost always came from the "রক্তদাতা
+          // হিসেবে প্রোফাইল খুলুন" button on the Blood tab — take them back
+          // there instead of leaving them sitting in My Business.
+          if(newListingId && data.category==='donor') state.tab='blood';
         }
         state.editingMyListingId=null;
         render();
