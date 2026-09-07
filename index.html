@@ -82,10 +82,16 @@
   .elk-location-strip .elk-combo-input:focus{outline:none; box-shadow:0 0 0 3px rgba(232,163,61,.35);}
   .elk-field .elk-combo-input{width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:var(--radius-sm); font-size:14.5px; background:var(--panel); color:var(--ink);}
   .elk-field .elk-combo-input:focus{outline:none; border-color:var(--marigold-deep); box-shadow:0 0 0 3px rgba(184,122,30,.14);}
+  .elk-combo-input[readonly]{cursor:pointer; caret-color:transparent;}
+  .elk-field .elk-combo-input[readonly], .elk-location-strip .elk-combo-input[readonly]{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23767E72' stroke-width='2'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; background-size:16px; padding-right:32px;
+  }
   .elk-combo-list{position:absolute; z-index:50; top:calc(100% + 4px); left:0; right:0; max-height:220px; overflow-y:auto; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg);}
   .elk-combo-opt{padding:10px 13px; font-size:13px; cursor:pointer; color:var(--ink); border-bottom:1px solid var(--line-soft);}
   .elk-combo-opt:last-child{border-bottom:none;}
   .elk-combo-opt:hover, .elk-combo-opt:active{background:var(--line-soft);}
+  .elk-combo-opt-new{color:var(--marigold-deep); font-weight:600;}
   .elk-combo-empty{padding:10px 13px; font-size:12.5px; color:var(--muted);}
   /* ---------- copy-to-clipboard button ---------- */
   .elk-copy-btn{flex:none; background:var(--line-soft); border:1px solid var(--line); color:var(--ink); border-radius:var(--radius-sm); width:36px; height:36px; font-size:14px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:background .15s, transform .1s;}
@@ -211,8 +217,8 @@
   @keyframes elkSlideUp{from{transform:translateY(24px); opacity:.6;} to{transform:translateY(0); opacity:1;}}
   .elk-sheet::before{content:""; display:block; width:38px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px;}
   .elk-sheet-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;}
-  .elk-sheet-close{background:var(--line-soft); border:1px solid var(--line); font-size:16px; font-weight:700; color:var(--ink); cursor:pointer; line-height:1; width:32px; height:32px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; transition:background .15s;}
-  .elk-sheet-close:hover{background:var(--line);}
+  .elk-sheet-close{background:rgba(130,130,120,.22); border:1.5px solid rgba(130,130,120,.6); font-size:17px; font-weight:700; color:var(--ink); cursor:pointer; line-height:1; width:34px; height:34px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; transition:background .15s; box-shadow:var(--shadow-sm);}
+  .elk-sheet-close:hover{background:rgba(130,130,120,.34);}
   .elk-sheet h2{font-size:21px;}
   .elk-sheet .area{color:var(--muted); font-size:13px; margin-top:4px;}
   .elk-sheet .desc{font-size:13.5px; line-height:1.65; margin:14px 0; color:var(--ink);}
@@ -263,7 +269,7 @@
   #ellaka-root.dark .elk-back-link{color:var(--marigold);}
   .elk-donor-card{border:1px solid var(--line); border-radius:var(--radius-md); padding:13px 15px; margin-bottom:10px; display:flex; align-items:center; gap:13px; background:var(--panel); box-shadow:var(--shadow-sm); transition:box-shadow .15s;}
   .elk-donor-card:hover{box-shadow:var(--shadow-md);}
-  .elk-donor-group{width:46px;height:46px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none; box-shadow:0 3px 8px rgba(181,75,50,.32);}
+  .elk-donor-group{width:46px;height:46px;min-width:46px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;line-height:1;flex:none; box-shadow:0 3px 8px rgba(181,75,50,.32); overflow:hidden; white-space:nowrap; padding:0; text-align:center;}
   .elk-security-note{font-size:11px; color:var(--muted); background:var(--line-soft); border:1px solid var(--line); border-radius:var(--radius-sm); padding:9px 11px; margin-top:12px; line-height:1.55;}
   .elk-locked-box{text-align:center; padding:48px 20px;}
   .elk-locked-box .big{font-size:42px; margin-bottom:12px;}
@@ -460,6 +466,7 @@
       districtLabel:"জেলা", districtPlaceholder:"যেমন: গাজীপুর",
       areaAltLabel:"এলাকা / মহল্লা / গ্রাম", areaAltPlaceholder:"যেমন: দত্তপাড়া (শহরে হলে এলাকার নাম, গ্রামে হলে গ্রামের নাম লিখুন)",
       newLocHint:"নতুন দেশ/জেলা/এলাকা লিখলে এটি নিজে থেকেই তালিকায় যোগ হবে।",
+      addNewLocationOpt:"➕ তালিকায় নেই — নিজে লিখুন",
       locationOptionalHint:"এলাকা জানানো ঐচ্ছিক — না দিলেও সমস্যা নেই। তবে দিলে কাছের ক্রেতারা আপনাকে সহজে খুঁজে পাবে।",
       phoneLabel:"ফোন নম্বর", subjectsLabel:"বিষয়সমূহ (কমা দিয়ে)", subjectsPlaceholder:"যেমন: গণিত, পদার্থবিজ্ঞান",
       qualificationLabel:"শিক্ষাগত যোগ্যতা ও অভিজ্ঞতা", qualificationPlaceholder:"যেমন: এমএসসি (গণিত), ঢাকা বিশ্ববিদ্যালয় · ৫ বছরের টিউশন অভিজ্ঞতা",
@@ -524,6 +531,7 @@
       viewMapBtn:"📍 মানচিত্রে দেখুন",
       addProductsBtn:"🖼️ পণ্য/ভিডিও", roomsBtnShort:"🛏️ রুম ও ভাড়া", viewChatsBtn:"💬 মেসেজ দেখুন",
       backToMyShop:"← আমার ব্যবসায় ফিরুন",
+      backToBlood:"← রক্তদাতা তালিকায় ফিরুন",
       backToWork:"← কাজের বাজারে ফিরুন",
       productsTitle:"পণ্য ও ভিডিও", noProducts:"এখনো কোনো পণ্য পোস্ট করা হয়নি।",
       productMediaTypeLabel:"ধরন", imageOpt:"ছবি", videoOpt:"ভিডিও",
@@ -683,6 +691,7 @@
       districtLabel:"District", districtPlaceholder:"e.g. Gazipur",
       areaAltLabel:"Area / neighborhood / village", areaAltPlaceholder:"e.g. Dattapara (use your area name in a city, or your village name in a village)",
       newLocHint:"Typing a new country/district/area will add it to the list automatically.",
+      addNewLocationOpt:"➕ Not listed — type your own",
       locationOptionalHint:"Sharing your area is optional — it's fine to skip it. Adding it helps nearby buyers find you.",
       phoneLabel:"Phone number", subjectsLabel:"Subjects (comma separated)", subjectsPlaceholder:"e.g. Math, Physics",
       qualificationLabel:"Qualifications & experience", qualificationPlaceholder:"e.g. MSc (Math), Dhaka University · 5 years tutoring experience",
@@ -747,6 +756,7 @@
       viewMapBtn:"📍 View on map",
       addProductsBtn:"🖼️ Products/Video", roomsBtnShort:"🛏️ Rooms & Rates", viewChatsBtn:"💬 View messages",
       backToMyShop:"← Back to My Business",
+      backToBlood:"← Back to Blood Donors",
       backToWork:"← Back to job board",
       productsTitle:"Products & Videos", noProducts:"No products posted yet.",
       productMediaTypeLabel:"Type", imageOpt:"Image", videoOpt:"Video",
@@ -1384,7 +1394,7 @@
     const selectedLabel = selectedOpt ? selectedOpt.label : (options[0] ? options[0].label : '');
     return `
       <div class="elk-combo" data-combo-id="${id}">
-        <input type="text" class="elk-combo-input" id="${id}-input" placeholder="${escapeHtml(placeholder||'')}" autocomplete="off" value="${escapeHtml(selectedLabel)}">
+        <input type="text" class="elk-combo-input" id="${id}-input" placeholder="${escapeHtml(placeholder||'')}" autocomplete="off" readonly value="${escapeHtml(selectedLabel)}">
         <div class="elk-combo-list" id="${id}-list" style="display:none;"></div>
       </div>`;
   }
@@ -1427,21 +1437,21 @@
       <div class="elk-field">
         <label>${t('countryLabel')}</label>
         <div class="elk-combo" data-combo-id="${prefix}-country">
-          <input type="text" class="elk-combo-input" name="country" id="${prefix}-country-input" autocomplete="off" ${req} value="${escapeHtml(v.country||'')}" placeholder="${escapeHtml(t('countryPlaceholder'))}">
+          <input type="text" class="elk-combo-input" name="country" id="${prefix}-country-input" autocomplete="off" ${req} readonly value="${escapeHtml(v.country||'')}" placeholder="${escapeHtml(t('countryPlaceholder'))}">
           <div class="elk-combo-list" id="${prefix}-country-list" style="display:none;"></div>
         </div>
       </div>
       <div class="elk-field">
         <label>${t('districtLabel')}</label>
         <div class="elk-combo" data-combo-id="${prefix}-district">
-          <input type="text" class="elk-combo-input" name="district" id="${prefix}-district-input" autocomplete="off" ${req} value="${escapeHtml(v.district||'')}" placeholder="${escapeHtml(t('districtPlaceholder'))}">
+          <input type="text" class="elk-combo-input" name="district" id="${prefix}-district-input" autocomplete="off" ${req} readonly value="${escapeHtml(v.district||'')}" placeholder="${escapeHtml(t('districtPlaceholder'))}">
           <div class="elk-combo-list" id="${prefix}-district-list" style="display:none;"></div>
         </div>
       </div>
       <div class="elk-field">
         <label>${t('areaAltLabel')}</label>
         <div class="elk-combo" data-combo-id="${prefix}-area">
-          <input type="text" class="elk-combo-input" name="area" id="${prefix}-area-input" autocomplete="off" ${req} value="${escapeHtml(v.area||'')}" placeholder="${escapeHtml(t('areaAltPlaceholder'))}">
+          <input type="text" class="elk-combo-input" name="area" id="${prefix}-area-input" autocomplete="off" ${req} readonly value="${escapeHtml(v.area||'')}" placeholder="${escapeHtml(t('areaAltPlaceholder'))}">
           <div class="elk-combo-list" id="${prefix}-area-list" style="display:none;"></div>
         </div>
       </div>
@@ -1457,20 +1467,33 @@
     function attachSuggest(input, listId, getOptions, onPick){
       const list = document.getElementById(listId);
       if(!list) return;
+      // tapping "+ type a new one" drops the readonly lock so people can type a
+      // brand-new country/district/area that isn't in the list yet (registerLocation()
+      // saves it after submit for everyone else to pick from next time)
+      function enableTyping(){
+        input.removeAttribute('readonly');
+        input.value = '';
+        input.focus();
+        show('');
+      }
       function show(filterText){
         const q = (filterText||'').trim().toLowerCase();
         const opts = getOptions();
         const filtered = q ? opts.filter(o=>o.toLowerCase().includes(q)) : opts;
-        if(!filtered.length){ list.style.display='none'; return; }
-        list.innerHTML = filtered.slice(0,50).map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('');
+        const optsHtml = filtered.slice(0,50).map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('');
+        const newHtml = input.hasAttribute('readonly') ? `<div class="elk-combo-opt elk-combo-opt-new" data-new="1">${escapeHtml(t('addNewLocationOpt'))}</div>` : '';
+        if(!filtered.length && !newHtml){ list.style.display='none'; return; }
+        list.innerHTML = optsHtml + newHtml;
         list.style.display = 'block';
-        list.querySelectorAll('.elk-combo-opt').forEach(opt=>{
+        list.querySelectorAll('.elk-combo-opt[data-value]').forEach(opt=>{
           opt.onmousedown = (e)=>{ e.preventDefault(); input.value = opt.dataset.value; list.style.display='none'; if(onPick) onPick(opt.dataset.value); };
         });
+        const newOpt = list.querySelector('.elk-combo-opt-new');
+        if(newOpt) newOpt.onmousedown = (e)=>{ e.preventDefault(); enableTyping(); };
       }
       input.oninput = ()=> show(input.value);
       // no input.select() here either — same mobile Cut/Copy/Paste popup issue as above
-      input.onfocus = ()=> show('');
+      input.onfocus = ()=> show(input.hasAttribute('readonly') ? '' : input.value);
       input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
     }
 
@@ -2359,9 +2382,10 @@
   }
   function renderMyShopForm(){
     const editing = state.editingMyListingId ? state.listings.find(x=>x.id===state.editingMyListingId && x.ownerDeviceId===state.deviceId) : null;
+    const isDonorForm = !editing && state.prefillMyListingCategory==='donor';
     return `
-      <span class="elk-back-link" id="elk-myshop-back">${t('backToMyShop')}</span>
-      <h3 style="font-size:17px;margin-bottom:12px;">${editing? t('myListingEditTitle') : t('myListingNewTitle')}</h3>
+      <span class="elk-back-link" id="elk-myshop-back" ${isDonorForm?'data-back-to-blood="1"':''}>${isDonorForm? t('backToBlood') : t('backToMyShop')}</span>
+      <h3 style="font-size:17px;margin-bottom:12px;">${editing? t('myListingEditTitle') : (isDonorForm? t('becomeDonorBtn') : t('myListingNewTitle'))}</h3>
       ${state.checkingSafety? `<div class="elk-spin-line">${t('checkingImage')}</div>` : ''}
       <form id="elk-my-listing-form">${myListingFormHtml(editing)}<button type="submit" class="elk-submit-btn">${editing? t('saveChanges') : t('addBtn')}</button></form>`;
   }
@@ -2563,6 +2587,9 @@
       return;
     }
     applyTheme();
+    // captured BEFORE rendering the body, since opening the donor-registration
+    // form clears state.prefillMyListingCategory as a side-effect of rendering it
+    const donorFormActive = (state.tab==='myshop' && state.myShopView==='form' && !state.editingMyListingId && state.prefillMyListingCategory==='donor');
     let body = '';
     if(state.tab==='home') body = renderHome();
     else if(state.tab==='search') body = renderSearch();
@@ -2578,9 +2605,9 @@
         <button data-tab="home" class="${state.tab==='home'?'active':''}"><span class="ic">🏠</span><span class="lb">${t('navHome')}</span></button>
         <button data-tab="search" class="${state.tab==='search'?'active':''}"><span class="ic">🔎</span><span class="lb">${t('navSearch')}</span></button>
         <button data-tab="advisor" class="${state.tab==='advisor'?'active':''}"><span class="ic">📚</span><span class="lb">${t('navAdvisor')}</span></button>
-        <button data-tab="blood" class="${state.tab==='blood'?'active':''}"><span class="ic">🩸</span><span class="lb">${t('navBlood')}</span></button>
+        <button data-tab="blood" class="${(state.tab==='blood'||donorFormActive)?'active':''}"><span class="ic">🩸</span><span class="lb">${t('navBlood')}</span></button>
         <button data-tab="work" class="${state.tab==='work'?'active':''}"><span class="ic">🧑‍💼</span><span class="lb">${t('navWork')}</span></button>
-        <button data-tab="myshop" class="${state.tab==='myshop'?'active':''}"><span class="ic">🏪</span><span class="lb">${t('navMyShop')}</span></button>
+        <button data-tab="myshop" class="${(state.tab==='myshop'&&!donorFormActive)?'active':''}"><span class="ic">🏪</span><span class="lb">${t('navMyShop')}</span></button>
       </div>`;
     document.getElementById('elk-modal-zone').innerHTML = renderImportModal() + renderChatModal() + renderProfileModal();
     bindEvents();
@@ -2881,7 +2908,12 @@
 
     // ---------- added: My Business (self-service profile), products, chat ----------
     const myShopBack = document.getElementById('elk-myshop-back');
-    if(myShopBack) myShopBack.onclick = ()=>{ state.myShopView='list'; state.editingMyListingId=null; state.productListingId=null; state.editingProductId=null; render(); };
+    if(myShopBack) myShopBack.onclick = ()=>{
+      const backToBlood = myShopBack.dataset.backToBlood==='1';
+      state.myShopView='list'; state.editingMyListingId=null; state.productListingId=null; state.editingProductId=null;
+      if(backToBlood) state.tab='blood';
+      render();
+    };
 
     const myAddListingBtn = document.getElementById('elk-my-add-listing');
     if(myAddListingBtn) myAddListingBtn.onclick = ()=>{ state.editingMyListingId=null; state.myShopView='form'; render(); };
