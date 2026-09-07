@@ -1375,6 +1375,40 @@
       (country==="সব"||a.country===country) && (district==="সব"||a.district===district)
     ).map(a=>a.area))).sort();
   }
+
+  // ---------- searchable type-to-find combo box (used for country/district/area filters) ----------
+  function filterComboHtml(id, options, selectedValue, placeholder){
+    const selectedOpt = options.find(o=>o.value===selectedValue);
+    const selectedLabel = selectedOpt ? selectedOpt.label : (options[0] ? options[0].label : '');
+    return `
+      <div class="elk-combo" data-combo-id="${id}">
+        <input type="text" class="elk-combo-input" id="${id}-input" placeholder="${escapeHtml(placeholder||'')}" autocomplete="off" value="${escapeHtml(selectedLabel)}">
+        <div class="elk-combo-list" id="${id}-list" style="display:none;"></div>
+      </div>`;
+  }
+  function initFilterCombo(id, options, onChange){
+    const input = document.getElementById(`${id}-input`);
+    const list = document.getElementById(`${id}-list`);
+    if(!input || !list) return;
+    function renderList(filterText){
+      const q = (filterText||'').trim().toLowerCase();
+      const filtered = q ? options.filter(o=>o.label.toLowerCase().includes(q)) : options;
+      list.innerHTML = filtered.length
+        ? filtered.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</div>`).join('')
+        : `<div class="elk-combo-empty">${t('comboNoMatch')}</div>`;
+      list.style.display = 'block';
+      list.querySelectorAll('.elk-combo-opt').forEach(opt=>{
+        opt.onmousedown = (e)=>{
+          e.preventDefault(); // fires before input blur, so we still get the click
+          list.style.display = 'none';
+          onChange(opt.dataset.value);
+        };
+      });
+    }
+    input.oninput = ()=> renderList(input.value);
+    input.onfocus = ()=>{ input.select(); renderList(''); };
+    input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
+  }
   async function registerLocation(country, district, area){
     const exists = state.areas.some(a=>a.country===country && a.district===district && a.area===area);
     if(!exists){
