@@ -193,7 +193,7 @@
   .elk-mic-btn:active{transform:scale(.9);}
   .elk-mic-btn.listening{background:var(--red); color:#fff; animation:elkpulse 1s infinite;}
   @keyframes elkpulse{0%{opacity:1;}50%{opacity:.55;}100%{opacity:1;}}
-  .elk-search-go{flex:none; background:var(--header); color:#FBF6E9; border:none; border-radius:22px; padding:11px 18px; font-weight:600; cursor:pointer; font-size:13.5px; box-shadow:0 2px 8px rgba(22,56,50,.28); transition:transform .1s, filter .15s;}
+  .elk-search-go{flex:none; background:var(--marigold); color:var(--header); border:none; border-radius:22px; padding:11px 18px; font-weight:600; cursor:pointer; font-size:13.5px; box-shadow:0 2px 8px rgba(22,56,50,.28); transition:transform .1s, filter .15s;}
   .elk-search-go:hover{filter:brightness(1.1);}
   .elk-search-go:active{transform:scale(.95);}
   .elk-lang-hint{font-size:11.5px; color:var(--muted); margin:-10px 0 16px 2px; line-height:1.5;}
@@ -211,7 +211,7 @@
   @keyframes elkSlideUp{from{transform:translateY(24px); opacity:.6;} to{transform:translateY(0); opacity:1;}}
   .elk-sheet::before{content:""; display:block; width:38px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px;}
   .elk-sheet-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;}
-  .elk-sheet-close{background:var(--line-soft); border:none; font-size:16px; color:var(--muted); cursor:pointer; line-height:1; width:32px; height:32px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; transition:background .15s;}
+  .elk-sheet-close{background:var(--line-soft); border:1px solid var(--line); font-size:16px; font-weight:700; color:var(--ink); cursor:pointer; line-height:1; width:32px; height:32px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; transition:background .15s;}
   .elk-sheet-close:hover{background:var(--line);}
   .elk-sheet h2{font-size:21px;}
   .elk-sheet .area{color:var(--muted); font-size:13px; margin-top:4px;}
@@ -1647,11 +1647,14 @@
     const areaOpts = ["সব", ...distinctAreas(state.countryFilter, state.districtFilter)];
     if(!areaOpts.includes(state.areaFilter)) state.areaFilter="সব";
 
+    const normLoc = s => (s||'').trim().toLowerCase();
     const matchListing = (l, country, district, area)=>{
       if(state.catFilter!=="all" && l.category!==state.catFilter) return false;
-      if(country!=="সব" && l.country!==country) return false;
-      if(district!=="সব" && l.district!==district) return false;
-      if(area!=="সব" && l.area!==area) return false;
+      // case/space-insensitive so "uttora" typed by a user still matches a
+      // listing saved as "Uttora", etc.
+      if(country!=="সব" && normLoc(l.country)!==normLoc(country)) return false;
+      if(district!=="সব" && normLoc(l.district)!==normLoc(district)) return false;
+      if(area!=="সব" && normLoc(l.area)!==normLoc(area)) return false;
       return true;
     };
     const base = visibleListings();
@@ -1687,6 +1690,7 @@
         </div>
         <div class="elk-loc-row">
           ${filterComboHtml('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.areaFilter, t('searchAreaPlaceholder'))}
+          <button type="button" class="elk-search-go" id="elk-loc-search-btn" title="${t('searchGo')}">🔍</button>
         </div>
       </div>`;
     return `
@@ -2201,7 +2205,10 @@
     return `
     <div class="elk-modal-backdrop" id="elk-profile-backdrop">
       <div class="elk-modal" onclick="event.stopPropagation()">
-        <h3>${t('profileModalTitle')}</h3>
+        <div class="elk-sheet-head" style="margin-bottom:0;">
+          <h3 style="margin:0;">${t('profileModalTitle')}</h3>
+          <button type="button" class="elk-sheet-close" id="elk-profile-close-x">✕</button>
+        </div>
         <div class="elk-section-sub">${escapeHtml(state.currentUserEmail||'')}</div>
         <div class="elk-section-sub">${t('profileModalSubtitle')}</div>
         <form id="elk-profile-form">
@@ -2290,11 +2297,20 @@
     const isNewListing = !l;
     const prefillCat = state.prefillMyListingCategory;
     if(!l && prefillCat) state.prefillMyListingCategory = null;
-    l = l || {category: prefillCat || 'shop', name:'', country:'', district:'', area:'', phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical'};
+    // no silent default category for a brand-new listing anymore — people were
+    // leaving the dropdown on whatever it opened to (e.g. "দোকান") without
+    // noticing, so their listing ended up under the wrong category and never
+    // showed up when someone filtered by the category they actually meant
+    // (e.g. "মুদির দোকান"). Now a new listing starts with no category picked
+    // and the field is required, so it has to be a conscious choice.
+    l = l || {category: prefillCat || '', name:'', country:'', district:'', area:'', phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical'};
     const bizType = l.bizType || 'physical';
     return `
       <div class="elk-field"><label>${t('catLabel')}</label>
-        <select name="category" id="elk-my-add-cat">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${l.category===k?'selected':''}>${v.icon} ${escapeHtml(catLabel(k))}</option>`).join('')}</select>
+        <select name="category" id="elk-my-add-cat" required>
+          ${!l.category ? `<option value="" disabled selected>${t('catChoosePlaceholder')}</option>` : ''}
+          ${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${l.category===k?'selected':''}>${v.icon} ${escapeHtml(catLabel(k))}</option>`).join('')}
+        </select>
       </div>
       <div class="elk-field">
         <label>${t('photoLabelUpload')}</label>
@@ -2652,6 +2668,8 @@
     if(profileBackdrop) profileBackdrop.onclick = ()=>{ state.modal=null; render(); };
     const profileCancel = document.getElementById('elk-profile-cancel');
     if(profileCancel) profileCancel.onclick = ()=>{ state.modal=null; render(); };
+    const profileCloseX = document.getElementById('elk-profile-close-x');
+    if(profileCloseX) profileCloseX.onclick = ()=>{ state.modal=null; render(); };
     bindCascadingLocation('elk-mp');
     const mpPhotoPickBtn = document.getElementById('elk-mp-photo-pick-btn');
     const mpPhotoFileInput = document.getElementById('elk-mp-photo-file');
@@ -2739,6 +2757,35 @@
       initFilterCombo('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.countryFilter=val; state.districtFilter='সব'; state.areaFilter='সব'; render(); });
       initFilterCombo('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.districtFilter=val; state.areaFilter='সব'; render(); });
       initFilterCombo('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.areaFilter=val; render(); });
+
+      // manual "search" — applies whatever text is currently typed in the three boxes
+      // directly as the filter, even if the person never tapped a suggestion from the
+      // dropdown list. Lets people just type + hit search/Enter instead of having to
+      // pick an exact existing option.
+      const pickCase = (typed, list)=>{
+        // if what was typed matches an already-registered value ignoring case/spacing,
+        // use that value's real casing so the box shows it cleanly after search.
+        const found = list.find(v=> (v||'').trim().toLowerCase()===typed.toLowerCase());
+        return found || typed;
+      };
+      const applyLocSearch = ()=>{
+        const cIn = document.getElementById('elk-country-input');
+        const dIn = document.getElementById('elk-district-input');
+        const aIn = document.getElementById('elk-area-input');
+        const cVal = (cIn && cIn.value || '').trim();
+        const dVal = (dIn && dIn.value || '').trim();
+        const aVal = (aIn && aIn.value || '').trim();
+        state.countryFilter = (!cVal || cVal===t('allCountriesOpt')) ? 'সব' : pickCase(cVal, distinctCountries());
+        state.districtFilter = (!dVal || dVal===t('allDistrictsOpt')) ? 'সব' : pickCase(dVal, distinctDistricts(state.countryFilter));
+        state.areaFilter = (!aVal || aVal===t('allAreasOpt')) ? 'সব' : pickCase(aVal, distinctAreas(state.countryFilter, state.districtFilter));
+        render();
+      };
+      const locSearchBtn = document.getElementById('elk-loc-search-btn');
+      if(locSearchBtn) locSearchBtn.onclick = applyLocSearch;
+      ['elk-country-input','elk-district-input','elk-area-input'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); applyLocSearch(); } });
+      });
     }
     const chips = document.getElementById('elk-cat-chips');
     if(chips) chips.querySelectorAll('.elk-chip').forEach(c=>{ c.onclick=()=>{ state.catFilter=c.dataset.cat; render(); }; });
