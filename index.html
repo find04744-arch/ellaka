@@ -312,6 +312,17 @@
   .elk-auth-switch a{color:var(--marigold-deep); font-weight:600; text-decoration:none;}
   .elk-auth-card .elk-submit-btn{width:100%; margin-top:6px;}
 </style>
+<script>
+  // PWA: service worker রেজিস্টার করা, যাতে "Add to Home Screen" কাজ করে
+  // এবং সাইট ইনস্টলযোগ্য হয়। ব্রাউজার সাপোর্ট না করলেও এটা নিরাপদে এড়িয়ে যাবে।
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js').catch((err) => {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+</script>
 </head>
 <body>
 
