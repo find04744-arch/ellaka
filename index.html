@@ -286,11 +286,13 @@
   .elk-product-card .cap{font-size:12px; margin-top:7px; color:var(--ink); line-height:1.4;}
   .elk-new-badge{position:absolute; top:13px; left:13px; background:var(--red); color:#fff; font-size:10px; padding:3px 8px; border-radius:10px; font-weight:600; box-shadow:0 2px 6px rgba(0,0,0,.25);}
   .elk-chat-modal{max-height:80vh; display:flex; flex-direction:column;}
-  .elk-chat-thread{flex:1; overflow-y:auto; max-height:44vh; display:flex; flex-direction:column; gap:9px; padding:12px; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--line-soft);}
-  .elk-chat-msg{max-width:78%; padding:9px 12px; border-radius:14px; font-size:13.5px; line-height:1.45; word-break:break-word; box-shadow:var(--shadow-sm);}
+  .elk-chat-thread{flex:1; overflow-y:auto; max-height:44vh; display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--line-soft);}
+  .elk-chat-msg{max-width:78%; padding:9px 13px; border-radius:16px; font-size:13.5px; line-height:1.45; word-break:break-word; box-shadow:var(--shadow-sm); border:1px solid transparent;}
   .elk-chat-msg-img{display:block; width:100%; max-width:180px; border-radius:9px; margin-bottom:7px;}
-  .elk-chat-msg.me{align-self:flex-end; background:var(--header); color:#FBF6E9; border-bottom-right-radius:4px;}
-  .elk-chat-msg.them{align-self:flex-start; background:var(--panel); color:var(--ink); border-bottom-left-radius:4px;}
+  .elk-chat-msg.me{align-self:flex-end; background:var(--marigold); color:#2B1B04; border-bottom-right-radius:5px; font-weight:500;}
+  .elk-chat-msg.them{align-self:flex-start; background:var(--panel); color:var(--ink); border-color:var(--line); border-bottom-left-radius:5px;}
+  #ellaka-root.dark .elk-chat-msg.me{background:var(--marigold); color:#2A1B08;}
+  #ellaka-root.dark .elk-chat-msg.them{background:#233731; border-color:#2E4139; color:var(--ink);}
   .elk-checkbox-row{display:flex; gap:9px; align-items:flex-start; margin:8px 0 14px; font-size:12.5px; color:var(--ink); line-height:1.55;}
   .elk-checkbox-row input{margin-top:3px; flex:none; accent-color:var(--marigold-deep);}
   .elk-lang-hint-sm{font-size:11px; color:var(--muted); margin:-9px 0 12px;}
@@ -1613,7 +1615,7 @@
         ${!isPersonCat ? (l.bizType==='online' ? `<span class="elk-badge-online">${t('onlineBadge')}</span>` : (hasLoc ? `<span class="elk-badge-physical">${t('physicalBadge')}</span>` : '')) : ''}
         ${isStayCat(l.category) && startingPrice(l)!==null ? `<div class="elk-row-price">${t('startingFromLabel')}: ${escapeHtml(String(startingPrice(l)))}</div>` : ''}
         ${l.category==='worker' && l.skills ? `<div class="elk-row-price">${t('skillsLabel')}: ${escapeHtml(l.skills)}</div>` : ''}
-        ${l.category==='donor' && l.bloodGroup ? `<div class="elk-donor-group" style="display:inline-block;margin-top:4px;">${escapeHtml(l.bloodGroup)}</div>` : ''}
+        ${l.category==='donor' && l.bloodGroup ? `<div class="elk-donor-group" style="margin-top:4px;">${escapeHtml(l.bloodGroup)}</div>` : ''}
         <div class="elk-stars">${starString(avg)} <span class="cnt">${avg?avg.toFixed(1):t('ratingNew')} (${l.ratingCount||0})</span></div>
       </div>
       ${l.phone ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()"><a class="elk-call-btn" href="tel:${escapeHtml(l.phone)}">${t('callBtn')}</a>${copyBtn(l.phone)}</div>` : ''}
@@ -1945,7 +1947,7 @@
         <div class="elk-sheet-head">
           <div><h2>${cat.icon} ${escapeHtml(l.name)}</h2><div class="area">${escapeHtml(catLabel(l.category))}${locLine? ' · '+locLine : ''}</div>
             ${!isPersonCat ? (l.bizType==='online' ? `<span class="elk-badge-online">${t('onlineBadge')}</span>` : (hasLoc ? `<span class="elk-badge-physical">${t('physicalBadge')}</span>` : '')) : ''}
-            ${l.category==='donor' && l.bloodGroup ? `<span class="elk-donor-group" style="display:inline-block;">${escapeHtml(l.bloodGroup)}</span>` : ''}
+            ${l.category==='donor' && l.bloodGroup ? `<span class="elk-donor-group" style="margin-top:6px;">${escapeHtml(l.bloodGroup)}</span>` : ''}
           </div>
           <button class="elk-sheet-close" id="elk-sheet-close">✕</button>
         </div>
@@ -2464,6 +2466,7 @@
   }
   function renderMyShop(){
     let body = '';
+    const isDonorForm = (state.myShopView==='form' && !state.editingMyListingId && state.prefillMyListingCategory==='donor');
     if(state.myShopView==='form') body = renderMyShopForm();
     else if(state.myShopView==='products') body = renderMyShopProducts();
     else if(state.myShopView==='chats') body = renderMyShopChatsView();
@@ -2499,7 +2502,7 @@
         }).join('')}</div>`}
       `;
     }
-    return `${renderHeader(t('myShopTitle'), t('myShopTagline'))}<div class="elk-content">${body}</div>`;
+    return `${renderHeader(isDonorForm ? t('becomeDonorBtn') : t('myShopTitle'), isDonorForm ? '' : t('myShopTagline'))}<div class="elk-content">${body}</div>`;
   }
 
   // added: shows everyone this device has blocked, with a one-tap unblock
