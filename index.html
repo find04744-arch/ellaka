@@ -1409,6 +1409,69 @@
     input.onfocus = ()=>{ input.select(); renderList(''); };
     input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
   }
+
+  // ---------- free-text country/district/area fields for forms (add listing / my profile / job post) ----------
+  // Unlike filterComboHtml above (which only lets people pick an EXISTING option to filter
+  // the list they're browsing), these fields let people TYPE their own country/district/area
+  // when registering a shop/profile/job — with suggestions from what's already registered,
+  // and registerLocation() (called after submit) saves any brand-new value for future use.
+  function locationFieldsHtml(prefix, values, required){
+    const v = values || {};
+    const req = required ? 'required' : '';
+    return `
+      <div class="elk-field">
+        <label>${t('countryLabel')}</label>
+        <div class="elk-combo" data-combo-id="${prefix}-country">
+          <input type="text" class="elk-combo-input" name="country" id="${prefix}-country-input" autocomplete="off" ${req} value="${escapeHtml(v.country||'')}" placeholder="${escapeHtml(t('countryPlaceholder'))}">
+          <div class="elk-combo-list" id="${prefix}-country-list" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="elk-field">
+        <label>${t('districtLabel')}</label>
+        <div class="elk-combo" data-combo-id="${prefix}-district">
+          <input type="text" class="elk-combo-input" name="district" id="${prefix}-district-input" autocomplete="off" ${req} value="${escapeHtml(v.district||'')}" placeholder="${escapeHtml(t('districtPlaceholder'))}">
+          <div class="elk-combo-list" id="${prefix}-district-list" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="elk-field">
+        <label>${t('areaAltLabel')}</label>
+        <div class="elk-combo" data-combo-id="${prefix}-area">
+          <input type="text" class="elk-combo-input" name="area" id="${prefix}-area-input" autocomplete="off" ${req} value="${escapeHtml(v.area||'')}" placeholder="${escapeHtml(t('areaAltPlaceholder'))}">
+          <div class="elk-combo-list" id="${prefix}-area-list" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="hint">${t('newLocHint')}</div>`;
+  }
+  function bindCascadingLocation(prefix){
+    const countryInput = document.getElementById(`${prefix}-country-input`);
+    const districtInput = document.getElementById(`${prefix}-district-input`);
+    const areaInput = document.getElementById(`${prefix}-area-input`);
+    // this form isn't the one currently on screen — nothing to bind, and that's fine
+    if(!countryInput || !districtInput || !areaInput) return;
+
+    function attachSuggest(input, listId, getOptions, onPick){
+      const list = document.getElementById(listId);
+      if(!list) return;
+      function show(filterText){
+        const q = (filterText||'').trim().toLowerCase();
+        const opts = getOptions();
+        const filtered = q ? opts.filter(o=>o.toLowerCase().includes(q)) : opts;
+        if(!filtered.length){ list.style.display='none'; return; }
+        list.innerHTML = filtered.slice(0,50).map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('');
+        list.style.display = 'block';
+        list.querySelectorAll('.elk-combo-opt').forEach(opt=>{
+          opt.onmousedown = (e)=>{ e.preventDefault(); input.value = opt.dataset.value; list.style.display='none'; if(onPick) onPick(opt.dataset.value); };
+        });
+      }
+      input.oninput = ()=> show(input.value);
+      input.onfocus = ()=>{ input.select(); show(''); };
+      input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
+    }
+
+    attachSuggest(countryInput, `${prefix}-country-list`, ()=>distinctCountries(), ()=>{ districtInput.value=''; areaInput.value=''; });
+    attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(countryInput.value.trim()||'সব'), ()=>{ areaInput.value=''; });
+    attachSuggest(areaInput, `${prefix}-area-list`, ()=>distinctAreas(countryInput.value.trim()||'সব', districtInput.value.trim()||'সব'));
+  }
   async function registerLocation(country, district, area){
     const exists = state.areas.some(a=>a.country===country && a.district===district && a.area===area);
     if(!exists){
