@@ -1406,7 +1406,10 @@
       });
     }
     input.oninput = ()=> renderList(input.value);
-    input.onfocus = ()=>{ input.select(); renderList(''); };
+    // NOTE: deliberately not calling input.select() here — on mobile browsers, JS-triggered
+    // text selection pops up the native Cut/Copy/Paste bubble instead of (or on top of) our
+    // dropdown, which looked like a glitch. Tapping the field alone is enough to open the list.
+    input.onfocus = ()=> renderList('');
     input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
   }
 
@@ -1464,7 +1467,8 @@
         });
       }
       input.oninput = ()=> show(input.value);
-      input.onfocus = ()=>{ input.select(); show(''); };
+      // no input.select() here either — same mobile Cut/Copy/Paste popup issue as above
+      input.onfocus = ()=> show('');
       input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
     }
 
