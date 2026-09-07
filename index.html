@@ -64,6 +64,7 @@
   .elk-brand{display:flex; align-items:baseline; gap:8px;}
   .elk-brand h1{font-size:23px; letter-spacing:.3px;}
   .elk-tagline{font-size:12.5px; color:#D9CFB2; margin-top:6px; position:relative; z-index:1; line-height:1.55; max-width:94%;}
+  .elk-made-by{font-size:9.5px; color:#D9CFB2; opacity:.55; margin-top:5px; letter-spacing:.2px; position:relative; z-index:1;}
   .elk-location-strip{display:flex; flex-direction:column; gap:8px; margin-top:16px; position:relative; z-index:1;}
   .elk-loc-row{display:flex; gap:8px;}
   .elk-location-strip select{
@@ -119,18 +120,18 @@
   /* ---------- layout / sections ---------- */
   .elk-content{padding:18px 16px 8px;}
   .elk-section-sub{font-size:12.5px; color:var(--muted); margin-bottom:16px; line-height:1.55;}
-  .elk-chiprow{display:flex; flex-wrap:wrap; gap:10px; padding:2px 2px 14px; margin-bottom:2px;}
+  .elk-chiprow{display:flex; flex-wrap:wrap; gap:8px; padding:2px 2px 14px; margin-bottom:2px;}
   .elk-chiprow::-webkit-scrollbar{display:none;}
-  .elk-chip{flex:none; padding:10px 16px; border-radius:24px; border:1.5px solid var(--line); background:var(--panel); font-size:13.5px; font-weight:600; white-space:nowrap; cursor:pointer; display:flex; align-items:center; gap:7px; color:var(--header); box-shadow:var(--shadow-sm); transition:background .15s var(--ease), box-shadow .15s, transform .1s, border-color .15s, color .15s;}
+  .elk-chip{flex:none; padding:7px 12px; border-radius:20px; border:1.5px solid var(--line); background:var(--panel); font-size:12px; font-weight:600; white-space:nowrap; cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--header); box-shadow:var(--shadow-sm); transition:background .15s var(--ease), box-shadow .15s, transform .1s, border-color .15s, color .15s;}
   #ellaka-root.dark .elk-chip{color:var(--ink);}
-  .elk-chip .ic{font-size:15px;}
+  .elk-chip .ic{font-size:13px;}
   .elk-chip:hover{border-color:var(--marigold-deep); box-shadow:var(--shadow-md);}
   .elk-chip:active{transform:scale(.95);}
   .elk-chip.active{background:var(--header); color:#FBF6E9; border-color:var(--header); box-shadow:0 4px 12px rgba(22,56,50,.32);}
   #ellaka-root.dark .elk-chip.active{color:#FBF6E9; box-shadow:0 4px 12px rgba(0,0,0,.5);}
 
   /* ---------- list rows ---------- */
-  .elk-list{display:flex; flex-direction:column; gap:10px; padding-top:2px;}
+  .elk-list{display:flex; flex-direction:column; gap:12px; padding-top:2px;}
   .elk-row{display:flex; gap:13px; padding:13px 14px; background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius-md); cursor:pointer; box-shadow:var(--shadow-sm); transition:box-shadow .15s var(--ease), transform .1s, border-color .15s;}
   .elk-row:hover{box-shadow:var(--shadow-md); border-color:var(--line);}
   .elk-row:active{transform:scale(.985);}
@@ -138,16 +139,16 @@
   #ellaka-root.dark .elk-icon-badge{background:var(--header-soft); border-color:transparent;}
   .elk-row-body{flex:1; min-width:0; align-self:center;}
   .elk-row-name{font-size:15px; font-weight:600; letter-spacing:.1px;}
-  .elk-row-area{font-size:12px; color:var(--muted); margin-top:3px;}
-  .elk-stars{font-size:12px; color:var(--marigold-deep); margin-top:5px;}
+  .elk-row-area{font-size:12px; color:var(--muted); margin-top:5px;}
+  .elk-stars{font-size:12px; color:var(--marigold-deep); margin-top:6px;}
   .elk-stars .cnt{color:var(--muted); margin-left:4px;}
   .elk-call-btn{flex:none; align-self:center; background:var(--marigold); color:#3A2500; border:none; border-radius:var(--radius-sm); padding:8px 14px; font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap; box-shadow:0 2px 8px rgba(184,122,30,.35); transition:transform .1s, box-shadow .15s;}
   .elk-call-btn:active{transform:scale(.95); box-shadow:0 1px 4px rgba(184,122,30,.35);}
   .elk-empty{text-align:center; padding:48px 24px; color:var(--muted); font-size:13.5px; line-height:1.7;}
 
   /* ---------- forms ---------- */
-  .elk-field{margin-bottom:16px;}
-  .elk-field label{display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--header); }
+  .elk-field{margin-bottom:18px;}
+  .elk-field label{display:block; font-size:13px; font-weight:600; margin-bottom:7px; color:var(--header); }
   #ellaka-root.dark .elk-field label{color:var(--marigold);}
   .elk-field input, .elk-field select, .elk-field textarea{width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:var(--radius-sm); font-size:14.5px; background:var(--panel); color:var(--ink); transition:border-color .15s, box-shadow .15s;}
   .elk-field input:focus, .elk-field select:focus, .elk-field textarea:focus{outline:none; border-color:var(--marigold-deep); box-shadow:0 0 0 3px rgba(184,122,30,.14);}
@@ -1389,6 +1390,17 @@
   }
 
   // ---------- searchable type-to-find combo box (used for country/district/area filters) ----------
+  // All these location dropdowns (this one plus the form version further below) used to
+  // open/close on input focus/blur, with a 150ms delay before hiding so a tap on an option
+  // had time to register. On real phones that timing isn't reliable — the list could hide
+  // itself a moment before the tap on an option landed, so the tap fell through to whatever
+  // was underneath instead of picking anything, making the dropdown look "stuck". Now every
+  // open/select/close step is driven directly by click, like a normal picker: tap the field
+  // to open it, tap an option to pick it and close, tap anywhere else to close it.
+  function closeAllCombos(){
+    document.querySelectorAll('.elk-combo-list').forEach(l=> l.style.display='none');
+  }
+  document.addEventListener('click', closeAllCombos);
   function filterComboHtml(id, options, selectedValue, placeholder){
     const selectedOpt = options.find(o=>o.value===selectedValue);
     const selectedLabel = selectedOpt ? selectedOpt.label : (options[0] ? options[0].label : '');
@@ -1402,27 +1414,24 @@
     const input = document.getElementById(`${id}-input`);
     const list = document.getElementById(`${id}-list`);
     if(!input || !list) return;
-    function renderList(filterText){
-      const q = (filterText||'').trim().toLowerCase();
-      const filtered = q ? options.filter(o=>o.label.toLowerCase().includes(q)) : options;
-      list.innerHTML = filtered.length
-        ? filtered.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</div>`).join('')
+    function renderList(){
+      list.innerHTML = options.length
+        ? options.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</div>`).join('')
         : `<div class="elk-combo-empty">${t('comboNoMatch')}</div>`;
-      list.style.display = 'block';
       list.querySelectorAll('.elk-combo-opt').forEach(opt=>{
-        opt.onmousedown = (e)=>{
-          e.preventDefault(); // fires before input blur, so we still get the click
+        opt.onclick = (e)=>{
+          e.stopPropagation();
           list.style.display = 'none';
           onChange(opt.dataset.value);
         };
       });
     }
-    input.oninput = ()=> renderList(input.value);
-    // NOTE: deliberately not calling input.select() here — on mobile browsers, JS-triggered
-    // text selection pops up the native Cut/Copy/Paste bubble instead of (or on top of) our
-    // dropdown, which looked like a glitch. Tapping the field alone is enough to open the list.
-    input.onfocus = ()=> renderList('');
-    input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
+    input.onclick = (e)=>{
+      e.stopPropagation();
+      const isOpen = list.style.display === 'block';
+      closeAllCombos();
+      if(!isOpen){ renderList(); list.style.display = 'block'; }
+    };
   }
 
   // ---------- free-text country/district/area fields for forms (add listing / my profile / job post) ----------
@@ -1486,15 +1495,24 @@
         list.innerHTML = optsHtml + newHtml;
         list.style.display = 'block';
         list.querySelectorAll('.elk-combo-opt[data-value]').forEach(opt=>{
-          opt.onmousedown = (e)=>{ e.preventDefault(); input.value = opt.dataset.value; list.style.display='none'; if(onPick) onPick(opt.dataset.value); };
+          opt.onclick = (e)=>{ e.stopPropagation(); input.value = opt.dataset.value; list.style.display='none'; if(onPick) onPick(opt.dataset.value); };
         });
         const newOpt = list.querySelector('.elk-combo-opt-new');
-        if(newOpt) newOpt.onmousedown = (e)=>{ e.preventDefault(); enableTyping(); };
+        if(newOpt) newOpt.onclick = (e)=>{ e.stopPropagation(); enableTyping(); };
       }
       input.oninput = ()=> show(input.value);
-      // no input.select() here either — same mobile Cut/Copy/Paste popup issue as above
-      input.onfocus = ()=> show(input.hasAttribute('readonly') ? '' : input.value);
-      input.onblur = ()=>{ setTimeout(()=>{ list.style.display='none'; }, 150); };
+      // Readonly fields (the normal case) open/close purely on click, like a picker.
+      // Once "+ type your own" is tapped the field becomes a real text input, so we
+      // fall back to focus for that case so the keyboard + list open together.
+      input.onclick = (e)=>{
+        e.stopPropagation();
+        if(input.hasAttribute('readonly')){
+          const isOpen = list.style.display === 'block';
+          closeAllCombos();
+          if(!isOpen) show('');
+        }
+      };
+      input.onfocus = ()=>{ if(!input.hasAttribute('readonly')) show(input.value); };
     }
 
     attachSuggest(countryInput, `${prefix}-country-list`, ()=>distinctCountries(), ()=>{ districtInput.value=''; areaInput.value=''; });
@@ -1659,6 +1677,7 @@
         </div>
       </div>
       <div class="elk-tagline">${tagline}</div>
+      <div class="elk-made-by">Made by ABC</div>
       ${opts.hideWarnBanner? '' : `<div class="elk-warn-banner">${t('safetyWarning')}</div>`}
       ${opts.locationStrip || ''}
     </div>`;
