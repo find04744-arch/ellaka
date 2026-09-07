@@ -508,6 +508,7 @@
       addNewLocationOpt:"➕ তালিকায় নেই — নিজে লিখুন",
       locationOptionalHint:"এলাকা জানানো ঐচ্ছিক — না দিলেও সমস্যা নেই। তবে দিলে কাছের ক্রেতারা আপনাকে সহজে খুঁজে পাবে।",
       phoneLabel:"ফোন নম্বর", subjectsLabel:"বিষয়সমূহ (কমা দিয়ে)", subjectsPlaceholder:"যেমন: গণিত, পদার্থবিজ্ঞান",
+      teachModeLabel:"পড়ানোর ধরন", teachModeOnline:"💻 অনলাইনে ক্লাস", teachModeOffline:"🏠 বাসায়/সরাসরি পড়ান", teachModeBoth:"✅ দুটোই",
       qualificationLabel:"শিক্ষাগত যোগ্যতা ও অভিজ্ঞতা", qualificationPlaceholder:"যেমন: এমএসসি (গণিত), ঢাকা বিশ্ববিদ্যালয় · ৫ বছরের টিউশন অভিজ্ঞতা",
       whatsappLabel:"হোয়াটসঅ্যাপ নম্বর (ঐচ্ছিক)", whatsappLabelRequired:"হোয়াটসঅ্যাপ নম্বর", whatsappPlaceholder:"যেমন: 01711223344",
       facebookLabel:"ফেসবুক আইডি/লিংক (ঐচ্ছিক)", facebookPlaceholder:"যেমন: facebook.com/yourpage",
@@ -1079,6 +1080,7 @@
       roomRate: row.room_rate, vehicleType: row.vehicle_type, skills: row.skills,
       cvUrl: row.cv_url, cvFileName: row.cv_file_name,
       bloodGroup: row.blood_group, lastDonation: row.last_donation,
+      teachingMode: row.teaching_mode,
       description: row.description, photoUrl: row.photo_url,
       ratingSum: 0, ratingCount: 0,
       createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
@@ -1094,6 +1096,7 @@
       subjects: data.subjects, room_rate: data.roomRate, vehicle_type: data.vehicleType, skills: data.skills,
       cv_url: data.cvUrl||null, cv_file_name: data.cvFileName||null,
       blood_group: data.bloodGroup||null, last_donation: data.lastDonation||null,
+      teaching_mode: data.teachingMode||null,
       description: data.description, photo_url: data.photoUrl||null,
     };
   }
@@ -2421,7 +2424,7 @@
     // showed up when someone filtered by the category they actually meant
     // (e.g. "মুদির দোকান"). Now a new listing starts with no category picked
     // and the field is required, so it has to be a conscious choice.
-    l = l || {category: prefillCat || '', name:'', country:'', district:'', area:'', phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical'};
+    l = l || {category: prefillCat || '', name:'', country:'', district:'', area:'', phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical', teachingMode:'offline'};
     const bizType = l.bizType || 'physical';
     return `
       <div class="elk-field"><label>${t('catLabel')}</label>
@@ -2440,15 +2443,22 @@
       </div>
       ${isNewListing ? `<div class="elk-location-optional-note">🖼️ ${t('addProductsHintOnCreate')}</div>` : ''}
       <div class="elk-field"><label>${t('nameLabel')}</label><input name="name" id="elk-my-name-input" required value="${escapeHtml(l.name)}" placeholder="${namePlaceholderFor(l.category)}"></div>
-      <div class="elk-field" id="elk-my-biztype-field" style="${(l.category==='worker'||l.category==='donor'||isFixedPlaceCat(l.category))?'display:none;':''}"><label>${t('bizTypeLabel')}</label>
+      <div class="elk-field" id="elk-my-biztype-field" style="${(l.category==='worker'||l.category==='donor'||l.category==='teacher'||isFixedPlaceCat(l.category))?'display:none;':''}"><label>${t('bizTypeLabel')}</label>
         <div class="elk-radio-row">
           <label><input type="radio" name="bizType" value="physical" ${bizType==='physical'?'checked':''}> ${t('bizTypePhysical')}</label>
           <label><input type="radio" name="bizType" value="online" ${bizType==='online'?'checked':''}> ${t('bizTypeOnline')}</label>
         </div>
       </div>
-      ${locationFieldsHtml('elk-my', l, false)}
+      <div class="elk-field" id="elk-my-teachmode-field" style="${l.category==='teacher'?'':'display:none;'}"><label>${t('teachModeLabel')}</label>
+        <div class="elk-radio-row">
+          <label><input type="radio" name="teachingMode" value="online" ${(l.teachingMode||'')==='online'?'checked':''}> ${t('teachModeOnline')}</label>
+          <label><input type="radio" name="teachingMode" value="offline" ${(l.teachingMode||'offline')==='offline'?'checked':''}> ${t('teachModeOffline')}</label>
+          <label><input type="radio" name="teachingMode" value="both" ${(l.teachingMode||'')==='both'?'checked':''}> ${t('teachModeBoth')}</label>
+        </div>
+      </div>
+      ${locationFieldsHtml('elk-my', l, true)}
       <div class="elk-field" id="elk-my-map-field" style="${(l.category==='worker'||l.category==='donor'||l.category==='teacher')?'display:none;':''}"><label>${t('mapQueryLabel')}</label><input name="mapQuery" value="${escapeHtml(l.mapQuery||'')}" placeholder="${t('mapQueryPlaceholder')}"><div class="hint">${t('mapQueryHint')}</div></div>
-      <div class="elk-field"><label>${t('phoneLabel')}</label><input name="phone" type="tel" value="${escapeHtml(l.phone)}"></div>
+      <div class="elk-field"><label>${t('phoneLabel')}</label><input name="phone" required type="tel" value="${escapeHtml(l.phone)}"></div>
       <div class="elk-field" id="elk-my-whatsapp-field" style="${l.category==='teacher'?'display:none;':''}"><label>${t('whatsappLabel')}</label><input name="whatsapp" type="tel" value="${escapeHtml(l.whatsapp||'')}" placeholder="${t('whatsappPlaceholder')}"></div>
       <div class="elk-field" id="elk-my-facebook-field" style="${l.category==='teacher'?'display:none;':''}"><label>${t('facebookLabelAlt')}</label><input name="facebook" value="${escapeHtml(l.facebook||'')}" placeholder="${t('facebookPlaceholder')}"></div>
       <div class="hint" style="margin:-8px 0 12px;">${t('toastNeedContact')}</div>
@@ -3168,6 +3178,8 @@
       const cvField = document.getElementById('elk-my-cv-field');
       const whatsappField = document.getElementById('elk-my-whatsapp-field');
       const facebookField = document.getElementById('elk-my-facebook-field');
+      const teachModeField = document.getElementById('elk-my-teachmode-field');
+      const phoneInput = document.querySelector('#elk-my-listing-form input[name="phone"]');
       const nameInput = document.getElementById('elk-my-name-input');
       const toggle = ()=>{
         const cat = myAddCat.value;
@@ -3189,7 +3201,11 @@
         if(cvField) cvField.style.display = (cat==='worker'||cat==='teacher') ? '' : 'none';
         if(bloodGroupField) bloodGroupField.style.display = cat==='donor' ? '' : 'none';
         if(lastDonationField) lastDonationField.style.display = cat==='donor' ? '' : 'none';
-        const isPersonCat = (cat==='worker' || cat==='donor');
+        if(teachModeField) teachModeField.style.display = cat==='teacher' ? '' : 'none';
+        // a teacher/worker/donor profile isn't a shop — there's no physical-vs-
+        // online-business choice to make, so that field only makes sense for
+        // actual shops/services that aren't already a fixed real-world place.
+        const isPersonCat = (cat==='worker' || cat==='donor' || cat==='teacher');
         const hideBizType = isPersonCat || isFixedPlaceCat(cat);
         if(bizTypeField) bizTypeField.style.display = hideBizType ? 'none' : '';
         if(hideBizType){
@@ -3202,6 +3218,11 @@
         if(mapField) mapField.style.display = (cat==='worker'||cat==='donor'||cat==='teacher') ? 'none' : '';
         if(whatsappField) whatsappField.style.display = cat==='teacher' ? 'none' : '';
         if(facebookField) facebookField.style.display = cat==='teacher' ? 'none' : '';
+        // phone is the one guaranteed contact method for every category (see
+        // the always-required attribute in the base template) — teacher also
+        // hides WhatsApp/Facebook, but phone itself is mandatory everywhere,
+        // so we no longer flip this off for other categories here.
+        if(phoneInput) phoneInput.required = true;
         if(nameInput) nameInput.placeholder = namePlaceholderFor(cat);
       };
       myAddCat.onchange = toggle; toggle();
@@ -3266,6 +3287,7 @@
           skills:(fd.get('skills')||'').trim(),
           cvUrl:(fd.get('cvUrl')||'').trim(), cvFileName:(fd.get('cvFileName')||'').trim(),
           bloodGroup: fd.get('bloodGroup')||'', lastDonation: fd.get('lastDonation')||'',
+          teachingMode: fd.get('teachingMode')||'',
           description:(fd.get('description')||'').trim(), photoUrl:(fd.get('photoUrl')||'').trim(),
         };
         if(!data.name || !data.country || !data.district || !data.area){ toast(t('toastFillRequired')); return; }
