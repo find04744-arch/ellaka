@@ -125,6 +125,8 @@
   .elk-lock-btn:hover, .elk-theme-btn:hover, .elk-lang-btn:hover{background:rgba(251,246,233,.2);}
   .elk-lock-btn.on{background:var(--marigold); color:#3A2500; border-color:var(--marigold); box-shadow:0 2px 8px rgba(232,163,61,.4);}
   .elk-theme-btn{padding:6px 10px;}
+  .elk-profile-btn-avatar{padding:3px; width:30px; height:30px; overflow:hidden; justify-content:center;}
+  .elk-profile-btn-avatar img{width:100%; height:100%; object-fit:cover; border-radius:50%;}
   .elk-lang-btn{
     padding:6px 22px 6px 11px; font-weight:600; max-width:92px; appearance:none; -webkit-appearance:none; -moz-appearance:none;
     background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='%23FBF3E1' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
@@ -615,6 +617,9 @@
       checkingImage:"🔍 ছবি যাচাই করা হচ্ছে…",
       imageBlockedToast:"এই ছবিতে adult/অশ্লীল কনটেন্ট শনাক্ত হয়েছে, তাই পোস্ট করা যায়নি।",
       profileBtnTitle:"প্রোফাইল",
+      inboxBtnTitle:"মেসেজ", inboxTitle:"মেসেজসমূহ",
+      noInboxMessages:"এখনো কোনো মেসেজ নেই। কোনো দোকান/প্রোফাইলে গিয়ে মেসেজ পাঠালে এখানে দেখা যাবে।",
+      inboxYouLabel:"আপনি", inboxSellerTag:"বিক্রেতা হিসেবে", inboxBuyerTag:"ক্রেতা হিসেবে",
       profileModalTitle:"👤 আমার প্রোফাইল",
       profileModalSubtitle:"এই প্রোফাইলটি দিয়ে আপনি ক্রেতা বা বিক্রেতা হিসেবে অ্যাপের মধ্যে অন্যদের সাথে যোগাযোগ করতে পারবেন।",
       myNameLabel:"আপনার নাম", myNamePlaceholder:"যেমন: করিম",
@@ -843,6 +848,9 @@
       checkingImage:"🔍 Checking the image…",
       imageBlockedToast:"Adult/explicit content was detected in this image, so it couldn't be posted.",
       profileBtnTitle:"Profile",
+      inboxBtnTitle:"Messages", inboxTitle:"Messages",
+      noInboxMessages:"No messages yet. Message a shop or profile and it'll show up here.",
+      inboxYouLabel:"You", inboxSellerTag:"as seller", inboxBuyerTag:"as buyer",
       profileModalTitle:"👤 My Profile",
       profileModalSubtitle:"This profile lets you contact others in the app, whether you're buying or selling.",
       myNameLabel:"Your name", myNamePlaceholder:"e.g. Karim",
@@ -953,6 +961,7 @@
     myShopView:"list", editingMyListingId:null, productListingId:null,
     myShopChatListingId:null, myShopChatPeers:[], myShopChatProfiles:{},
     chatListingId:null, chatPeerId:null, chatMessages:[],
+    inboxThreads:[], inboxLoading:false,
     myProfileName:"", myProfilePhoto:"", myProfilePhone:"", myProfileWhatsapp:"", myProfileFacebook:"",
     myProfileType:"", myProfileCountry:"", myProfileDistrict:"", myProfileArea:"", checkingSafety:false,
     productSearchQuery:"", productSearchResult:null,
@@ -1391,6 +1400,63 @@
       if(from==='buyer' && state.myProfileName) await saveMyProfile();
     }catch(e){ toast(t('toastRefreshFailed')); }
   }
+  async function loadInbox(){
+    // A real "all my conversations in one place" inbox (like Messenger/FB
+    // Lite), instead of only being able to see messages one listing at a
+    // time from inside "আমার ব্যবসা". A thread is a unique (listing_id,
+    // buyer_id) pair — I'm in it either because I AM that buyer_id (I
+    // messaged someone as myself), or because I own the listing (someone
+    // messaged one of my listings).
+    state.modal = 'inbox'; state.inboxLoading = true; state.inboxThreads = [];
+    render();
+    try{
+      const myListingIds = state.listings.filter(l=>l.ownerDeviceId===state.deviceId).map(l=>l.id);
+      const queries = [ sb.from('messages').select('*').eq('buyer_id', state.deviceId).order('created_at', {ascending:false}) ];
+      if(myListingIds.length) queries.push(sb.from('messages').select('*').in('listing_id', myListingIds).order('created_at', {ascending:false}));
+      const results = await Promise.all(queries);
+      const rows = results.flatMap(r=>r.data||[]);
+      // dedupe to one (most recent) row per thread
+      const byThread = {};
+      rows.forEach(row=>{
+        const key = row.listing_id+'|'+row.buyer_id;
+        const existing = byThread[key];
+        if(!existing || new Date(row.created_at).getTime() > new Date(existing.created_at).getTime()) byThread[key] = row;
+      });
+      const threads = Object.values(byThread);
+      const peerIds = Array.from(new Set(threads.map(row=>{
+        const l = state.listings.find(x=>x.id===row.listing_id);
+        const iAmBuyer = row.buyer_id === state.deviceId;
+        return iAmBuyer ? (l && l.ownerDeviceId) : row.buyer_id;
+      }).filter(Boolean)));
+      let profilesById = {};
+      if(peerIds.length){
+        const { data: profiles } = await sb.from('chat_profiles').select('*').in('id', peerIds);
+        profilesById = Object.fromEntries((profiles||[]).map(p=>[p.id, p]));
+      }
+      state.inboxThreads = threads.map(row=>{
+        const l = state.listings.find(x=>x.id===row.listing_id);
+        const iAmBuyer = row.buyer_id === state.deviceId;
+        const peerId = iAmBuyer ? (l && l.ownerDeviceId) : row.buyer_id;
+        const peerProfile = peerId ? profilesById[peerId] : null;
+        // when I'm the buyer, "who am I talking to" is best shown as the shop/
+        // listing name (that's what I recognize); when I'm the seller, show the
+        // buyer's saved profile name if they set one, otherwise a generic label.
+        const peerName = iAmBuyer ? (l ? l.name : (peerProfile && peerProfile.name) || '')
+          : ((peerProfile && peerProfile.name) || '');
+        return {
+          listingId: row.listing_id, buyerId: row.buyer_id,
+          listingName: l ? l.name : '',
+          role: iAmBuyer ? 'buyer' : 'seller',
+          peerName,
+          preview: row.body || (row.image_url ? '📷' : (row.video_url ? '🎥' : '')),
+          ts: new Date(row.created_at).getTime(),
+        };
+      }).sort((a,b)=> b.ts - a.ts);
+    }catch(e){ state.inboxThreads = []; }
+    state.inboxLoading = false;
+    render();
+  }
+
   async function openMyShopChats(listingId){
     state.myShopChatListingId = listingId; state.myShopChatPeers = []; state.myShopChatProfiles = {};
     try{
@@ -1738,7 +1804,8 @@
           <button class="elk-theme-btn" id="elk-refresh-btn" title="${t('refreshTitle')}">🔄</button>
           <button class="elk-theme-btn" id="elk-theme-btn">${state.theme==='dark'?'☀️':'🌙'}</button>
           <select class="elk-lang-btn" id="elk-lang-select" title="Language / ভাষা">${LANGUAGES.map(l=>`<option value="${l.code}" ${state.lang===l.code?'selected':''}>${l.name}</option>`).join('')}</select>
-          <button class="elk-theme-btn" id="elk-profile-btn" title="${t('profileBtnTitle')}">👤</button>
+          <button class="elk-theme-btn" id="elk-inbox-btn" title="${t('inboxBtnTitle')}">💬</button>
+          <button class="elk-theme-btn elk-profile-btn-avatar" id="elk-profile-btn" title="${t('profileBtnTitle')}">${state.myProfilePhoto ? `<img src="${escapeHtml(state.myProfilePhoto)}" onerror="this.parentElement.textContent='👤'">` : '👤'}</button>
         </div>
       </div>
       <div class="elk-tagline">${tagline}</div>
@@ -2365,6 +2432,28 @@
   }
 
   // added: simple chat modal (buyer <-> shop/hotel/pharmacy owner)
+  function renderInboxModal(){
+    if(state.modal!=='inbox') return '';
+    const threads = state.inboxThreads||[];
+    return `
+    <div class="elk-modal-backdrop" id="elk-inbox-backdrop">
+      <div class="elk-modal" onclick="event.stopPropagation()">
+        <div class="elk-sheet-head" style="margin-bottom:0;">
+          <h3 style="margin:0;">${t('inboxTitle')}</h3>
+          <button type="button" class="elk-sheet-close" id="elk-inbox-close">✕</button>
+        </div>
+        ${state.inboxLoading ? `<div class="elk-spin-line">${t('checkingImage')}</div>` :
+          threads.length===0 ? `<div class="elk-empty">${t('noInboxMessages')}</div>` :
+          threads.map(th=>`
+          <div class="elk-peer-card" data-inbox-thread="1" data-listing="${escapeHtml(th.listingId)}" data-buyer="${escapeHtml(th.buyerId)}" style="cursor:pointer;">
+            <div class="elk-admin-menu-btn"><span class="ic">💬</span><span class="lbl">${escapeHtml(th.peerName || th.listingName || '—')}
+              <div class="elk-peer-area">${th.role==='buyer'?t('inboxBuyerTag'):t('inboxSellerTag')}${th.listingName && th.role==='seller' ? ' · '+escapeHtml(th.listingName) : ''}</div>
+              <div class="elk-peer-area" style="opacity:.8;">${escapeHtml((th.preview||'').slice(0,60))}</div>
+            </span></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
   function renderChatModal(){
     if(state.modal!=='chat' || !state.chatListingId) return '';
     const l = state.listings.find(x=>x.id===state.chatListingId);
@@ -2715,7 +2804,7 @@
         <button data-tab="work" class="${state.tab==='work'?'active':''}"><span class="ic">🧑‍💼</span><span class="lb">${t('navWork')}</span></button>
         <button data-tab="myshop" class="${(state.tab==='myshop'&&!donorFormActive)?'active':''}"><span class="ic">🏪</span><span class="lb">${t('navMyShop')}</span></button>
       </div>`;
-    document.getElementById('elk-modal-zone').innerHTML = renderImportModal() + renderChatModal() + renderProfileModal();
+    document.getElementById('elk-modal-zone').innerHTML = renderImportModal() + renderChatModal() + renderProfileModal() + renderInboxModal();
     bindEvents();
   }
 
@@ -2823,6 +2912,19 @@
 
     const profileBtn = document.getElementById('elk-profile-btn');
     if(profileBtn) profileBtn.onclick = ()=>{ state.modal='profile'; render(); };
+    const inboxBtn = document.getElementById('elk-inbox-btn');
+    if(inboxBtn) inboxBtn.onclick = ()=> loadInbox();
+    const inboxBackdrop = document.getElementById('elk-inbox-backdrop');
+    if(inboxBackdrop) inboxBackdrop.onclick = ()=>{ state.modal=null; render(); };
+    const inboxClose = document.getElementById('elk-inbox-close');
+    if(inboxClose) inboxClose.onclick = ()=>{ state.modal=null; render(); };
+    document.querySelectorAll('[data-inbox-thread]').forEach(el=>{
+      el.onclick = ()=>{
+        const listingId = el.dataset.listing, buyerId = el.dataset.buyer;
+        state.modal = null;
+        openChat(listingId, buyerId);
+      };
+    });
     const profileBackdrop = document.getElementById('elk-profile-backdrop');
     if(profileBackdrop) profileBackdrop.onclick = ()=>{ state.modal=null; render(); };
     const profileCancel = document.getElementById('elk-profile-cancel');
