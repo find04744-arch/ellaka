@@ -349,11 +349,16 @@
   // but that's exactly why, every time we upload a new index.html, phones
   // that already installed this app (or even just visited it in the browser)
   // kept showing the OLD cached version, no matter how many real fixes went
-  // into the file. Below we now (1) explicitly ask the browser to check the
-  // network for a newer service-worker.js instead of trusting the cached
-  // one, and (2) auto-reload the page exactly once when a newer version
-  // finishes taking over, so updates actually reach people instead of
-  // silently sitting there un-applied.
+  // into the file. So below we explicitly ask the browser to check the
+  // network for a newer service-worker.js instead of trusting the cached one.
+  //
+  // NOTE: an earlier version of this auto-reloaded the page the instant a
+  // new version finished installing. That caused a real problem — Chrome
+  // checks for service-worker updates in the background at unpredictable
+  // moments (including while someone is mid-way through filling out a
+  // form), so an unprompted reload could silently wipe whatever someone was
+  // typing. Now we only show a small dismissible "নতুন ভার্সন এসেছে" banner
+  // with a manual refresh button — nothing reloads on its own.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js').then((reg) => {
@@ -363,7 +368,7 @@
           if(!newWorker) return;
           newWorker.addEventListener('statechange', () => {
             if(newWorker.state === 'activated' && navigator.serviceWorker.controller){
-              location.reload();
+              showUpdateAvailableBanner();
             }
           });
         });
@@ -371,6 +376,20 @@
         console.warn('Service worker registration failed:', err);
       });
     });
+  }
+  function showUpdateAvailableBanner(){
+    if(document.getElementById('elk-update-banner')) return;
+    const bar = document.createElement('div');
+    bar.id = 'elk-update-banner';
+    bar.style.cssText = 'position:fixed; left:0; right:0; bottom:0; z-index:999; max-width:480px; margin:0 auto; background:#163832; color:#FBF6E9; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; font-family:"Hind Siliguri",sans-serif; font-size:13px; box-shadow:0 -2px 10px rgba(0,0,0,.25);';
+    bar.innerHTML = '<span>🔄 নতুন ভার্সন এসেছে</span>'
+      + '<span style="display:flex; gap:8px;">'
+      + '<button id="elk-update-refresh-btn" style="background:#E8A33D; color:#3A2500; border:none; border-radius:20px; padding:7px 14px; font-weight:700; font-size:12.5px; cursor:pointer;">রিফ্রেশ করুন</button>'
+      + '<button id="elk-update-dismiss-btn" style="background:transparent; color:#FBF6E9; border:1px solid rgba(251,246,233,.4); border-radius:20px; padding:7px 12px; font-size:12.5px; cursor:pointer;">✕</button>'
+      + '</span>';
+    document.body.appendChild(bar);
+    document.getElementById('elk-update-refresh-btn').onclick = () => location.reload();
+    document.getElementById('elk-update-dismiss-btn').onclick = () => bar.remove();
   }
 </script>
 </head>
@@ -461,6 +480,7 @@
       searchGo:"খুঁজুন", searchHint:"✨ এই সার্চ AI দিয়ে বাংলা/বাংলিশ/ইংরেজি — সব বোঝার চেষ্টা করে।",
       searching:"🔎 খোঁজা হচ্ছে…", searchPrompt:'উপরে লিখুন বা 🎤 চেপে বলুন, তারপর "খুঁজুন" চাপুন।',
       searchNoResult:'দুঃখিত, "{q}" এর জন্য কিছু পাওয়া যায়নি।',
+      jobResultsLabel:"🧑‍💼 কাজের পোস্ট",
       voiceUnsupported:"এই ব্রাউজারে ভয়েস সার্চ সাপোর্ট করে না।",
       voiceError:"ভয়েস শোনা যায়নি, আবার চেষ্টা করুন।",
       voiceMicError:"মাইক্রোফোন চালু করা যায়নি।",
@@ -694,6 +714,7 @@
       searchGo:"Search", searchHint:"✨ This search uses AI to understand Bangla/Banglish/English — all of it.",
       searching:"🔎 Searching…", searchPrompt:'Type above or tap 🎤 to speak, then press "Search".',
       searchNoResult:'Sorry, nothing found for "{q}".',
+      jobResultsLabel:"🧑‍💼 Job posts",
       voiceUnsupported:"Voice search isn't supported in this browser.",
       voiceError:"Couldn't hear you, please try again.",
       voiceMicError:"Couldn't start the microphone.",
@@ -953,7 +974,7 @@
     security:{failedAttempts:0, locked:false},
     countryFilter:"সব", districtFilter:"সব", areaFilter:"সব", catFilter:"all",
     myRatings:{},
-    searchQuery:"", searchDone:false, searching:false, aiSearchIds:null,
+    searchQuery:"", searchDone:false, searching:false, aiSearchIds:null, aiSearchJobIds:null,
     advSubject:"", advNote:"", advDone:false, advSearching:false, advResult:null,
     donorGroupFilter:"সব", donorCountryFilter:"সব", donorDistrictFilter:"সব", donorAreaFilter:"সব",
     openListingId:null,
@@ -1784,6 +1805,30 @@
     }).filter(x=>x.score>0).sort((a,b)=> b.score-a.score || avgRating(b.l)-avgRating(a.l)).map(x=>x.l);
   }
 
+  // Same idea as localKeywordSearch, but over job posts — otherwise "I need
+  // this" search could never find someone's job listing (e.g. "দোকান
+  // সহকারী"), since jobs live in a completely separate table from listings.
+  function jobKeywordSearch(q){
+    q = q.trim().toLowerCase();
+    if(!q) return [];
+    const qWords = q.split(/\s+/).filter(Boolean);
+    return state.jobs.map(j=>{
+      const hay = (j.title+" "+(j.description||"")+" "+(j.name||"")
+        +" "+(j.country||"")+" "+(j.district||"")+" "+(j.area||"")).toLowerCase();
+      const hayTokens = hay.split(/[\s,]+/).filter(Boolean);
+      let score=0;
+      qWords.forEach(w=>{
+        if(!w) return;
+        if(hay.includes(w)){ score++; return; }
+        if(w.length>=3){
+          const stem = w.slice(0, Math.max(3, w.length-2));
+          if(hayTokens.some(tok=> tok.length>=3 && (tok.startsWith(stem) || stem.startsWith(tok.slice(0, Math.max(3, tok.length-2)))))) score++;
+        }
+      });
+      return {j, score};
+    }).filter(x=>x.score>0).sort((a,b)=> b.score-a.score || (b.j.createdAt||0)-(a.j.createdAt||0)).map(x=>x.j);
+  }
+
   // added: a quick local check so an obviously adult/explicit search never even
   // reaches the AI matcher or shows results on this general local-services app.
   function isAdultQuery(q){
@@ -1797,12 +1842,13 @@
   // Claude.ai sandbox and would have cost real money at real-world scale.
   async function runAiSearch(query){
     if(isAdultQuery(query)){
-      state.aiSearchIds = []; state.searching = false; state.searchDone = true; render();
+      state.aiSearchIds = []; state.aiSearchJobIds = []; state.searching = false; state.searchDone = true; render();
       toast(t('adultSearchBlockedToast'));
       return;
     }
-    state.searching = true; state.aiSearchIds = null; render();
+    state.searching = true; state.aiSearchIds = null; state.aiSearchJobIds = null; render();
     state.aiSearchIds = localKeywordSearch(query).map(l=>l.id);
+    state.aiSearchJobIds = jobKeywordSearch(query).map(j=>j.id);
     state.searching = false; state.searchDone = true; render();
   }
 
@@ -1956,11 +2002,15 @@
 
   function renderSearch(){
     let results = [];
+    let jobResults = [];
     if(state.searchDone){
       if(Array.isArray(state.aiSearchIds)) results = state.aiSearchIds.map(id=>visibleListings().find(l=>l.id===id)).filter(Boolean);
       else if(state.aiSearchIds===null && !state.searching) results = localKeywordSearch(state.searchQuery);
       results = sortByProximityAndRecency(results);
+      if(Array.isArray(state.aiSearchJobIds)) jobResults = state.aiSearchJobIds.map(id=>state.jobs.find(j=>j.id===id)).filter(Boolean);
+      else if(state.aiSearchJobIds===null && !state.searching) jobResults = jobKeywordSearch(state.searchQuery);
     }
+    const totalCount = results.length + jobResults.length;
     return `
     ${renderHeader(t('searchTitle'), t('searchTagline'))}
     <div class="elk-content">
@@ -1973,8 +2023,9 @@
       ${state.checkingSafety ? `<div class="elk-spin-line">${t('checkingImage')}</div>` : ''}
       ${state.searching ? `<div class="elk-spin-line">${t('searching')}</div>` :
         !state.searchDone ? `<div class="elk-empty">${t('searchPrompt')}</div>` :
-        results.length===0 ? `<div class="elk-empty">${t('searchNoResult', {q: escapeHtml(state.searchQuery)})}</div>` :
-        `<div class="elk-list">${results.map(renderRow).join('')}</div>`}
+        totalCount===0 ? `<div class="elk-empty">${t('searchNoResult', {q: escapeHtml(state.searchQuery)})}</div>` :
+        `${results.length ? `<div class="elk-list">${results.map(renderRow).join('')}</div>` : ''}
+         ${jobResults.length ? `<div class="elk-section-sub" style="margin-top:${results.length?'14px':'0'};">${t('jobResultsLabel')}</div><div class="elk-list">${jobResults.map(renderJobCard).join('')}</div>` : ''}`}
     </div>`;
   }
 
@@ -3008,6 +3059,8 @@
     if(profileCancel) profileCancel.onclick = ()=>{ state.modal=null; render(); };
     const profileCloseX = document.getElementById('elk-profile-close-x');
     if(profileCloseX) profileCloseX.onclick = ()=>{ state.modal=null; render(); };
+    const logoutBtn2 = document.getElementById('elk-logout-btn2');
+    if(logoutBtn2) logoutBtn2.onclick = ()=>{ state.modal=null; signOut(); };
     bindCascadingLocation('elk-mp');
     const mpPhotoPickBtn = document.getElementById('elk-mp-photo-pick-btn');
     const mpPhotoFileInput = document.getElementById('elk-mp-photo-file');
