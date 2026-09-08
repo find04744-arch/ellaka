@@ -193,6 +193,9 @@
   .elk-contact-row-compact{gap:7px;}
   .elk-contact-row-compact .elk-call-btn, .elk-wa-btn-compact{flex:none; padding:7px 12px; font-size:11.5px; border-radius:var(--radius-sm);}
   .elk-icon-msg-btn{flex:none; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; background:var(--panel); border:1.5px solid var(--line); color:var(--ink); border-radius:50%; font-size:15px; cursor:pointer; padding:0; transition:background .12s, transform .1s, border-color .15s;}
+  .elk-unread-dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--red); margin-left:3px; vertical-align:top;}
+  .elk-inbox-btn-wrap{position:relative; display:inline-block;}
+  .elk-inbox-badge{position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; padding:0 3px; border-radius:8px; background:var(--red); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; line-height:1;}
   .elk-icon-msg-btn:hover{border-color:var(--muted);}
   .elk-icon-msg-btn:active{transform:scale(.92); background:var(--line-soft);}
   .elk-fb-btn{background:#1877F2; color:#fff; box-shadow:0 2px 8px rgba(24,119,242,.3);}
@@ -634,6 +637,8 @@
       noChats:"এখনো কোনো মেসেজ নেই।", chatWithLabel:"কথোপকথন", chatsTitle:"মেসেজসমূহ",
       blockBtn:"🚫 ব্লক করুন", unblockBtn:"🔓 আনব্লক করুন",
       confirmBlockUser:"এই ব্যবহারকারীকে ব্লক করতে চান? ব্লক করলে সে আপনাকে আর মেসেজ দিতে পারবে না, আপনার প্রোফাইলও দেখতে পারবে না।",
+      reportBtn:"🚩 রিপোর্ট করুন", reportReasonPrompt:"কেন রিপোর্ট করছেন? (সংক্ষেপে লিখুন)", toastReported:"রিপোর্ট পাঠানো হয়েছে, ধন্যবাদ। আমরা দেখে ব্যবস্থা নেব।",
+      generalUserLabel:"সাধারণ ইউজার",
       toastUserBlocked:"ব্লক করা হয়েছে।", toastUserUnblocked:"আনব্লক করা হয়েছে।",
       profileBlockedNotice:"এই প্রোফাইলের সাথে যোগাযোগ বন্ধ রাখা হয়েছে (ব্লক করা)।",
       chatBlockedNotice:"এই ব্যবহারকারীর সাথে আপনার ব্লক সম্পর্ক আছে, তাই মেসেজ চালাচালি বন্ধ রাখা হয়েছে।",
@@ -867,6 +872,8 @@
       noChats:"No messages yet.", chatWithLabel:"Conversation", chatsTitle:"Messages",
       blockBtn:"🚫 Block", unblockBtn:"🔓 Unblock",
       confirmBlockUser:"Block this user? They won't be able to message you or see your profile anymore.",
+      reportBtn:"🚩 Report", reportReasonPrompt:"Why are you reporting this? (short reason)", toastReported:"Report sent, thank you — we'll review it.",
+      generalUserLabel:"General user",
       toastUserBlocked:"Blocked.", toastUserUnblocked:"Unblocked.",
       profileBlockedNotice:"Contact with this profile is turned off (blocked).",
       chatBlockedNotice:"You and this user have a block between you, so messaging is turned off.",
@@ -974,6 +981,18 @@
     const c = CATS[catKey] || CATS.other;
     return (c.label && (c.label[state.lang] || c.label.bn)) || catKey;
   }
+  // added: shows who someone actually is (blood donor / shop owner / job
+  // seeker / just a general user) next to their name in chat/inbox — figured
+  // out from whatever they've posted, since we don't store a separate
+  // "identity" field anywhere.
+  function peerRoleLabel(peerId){
+    if(!peerId) return '';
+    const l = state.listings.find(x=>x.ownerDeviceId===peerId);
+    if(l) return catLabel(l.category);
+    const j = state.jobs.find(x=>x.ownerDeviceId===peerId);
+    if(j) return j.postType==='hiring' ? t('hiringBadge') : t('seekingBadge');
+    return t('generalUserLabel');
+  }
 
   let state = {
     tab:"home", loaded:false, theme:"light", lang:"bn", i18nCache:{}, translating:false,
@@ -992,7 +1011,7 @@
     myShopView:"list", editingMyListingId:null, productListingId:null,
     myShopChatListingId:null, myShopChatPeers:[], myShopChatProfiles:{},
     chatListingId:null, chatJobId:null, chatPeerId:null, chatMessages:[],
-    inboxThreads:[], inboxLoading:false,
+    inboxThreads:[], inboxLoading:false, unreadCount:0,
     myProfileName:"", myProfilePhoto:"", myProfilePhone:"", myProfileWhatsapp:"", myProfileFacebook:"",
     myProfileType:"", myProfileCountry:"", myProfileDistrict:"", myProfileArea:"", checkingSafety:false,
     productSearchQuery:"", productSearchResult:null,
@@ -1227,6 +1246,31 @@
     try{ state.lang = localStorage.getItem('ellaka_lang') || 'bn'; }catch(e){ state.lang='bn'; }
     state.loaded = true; applyTheme(); render();
     if(state.lang!=='bn' && state.lang!=='en'){ await ensureTranslation(state.lang); render(); }
+    refreshUnreadCount();
+  }
+  // added: counts how many DIFFERENT people have an unread message waiting
+  // for me (like the little number on Messenger's chat icon) — not every
+  // unread message, just every unread THREAD, so one chatty buyer doesn't
+  // inflate the badge.
+  async function refreshUnreadCount(){
+    if(!state.session){ state.unreadCount = 0; return; }
+    try{
+      const myListingIds = state.listings.filter(l=>l.ownerDeviceId===state.deviceId).map(l=>l.id);
+      const myJobIds = state.jobs.filter(j=>j.ownerDeviceId===state.deviceId).map(j=>j.id);
+      const queries = [ sb.from('messages').select('listing_id, job_id, buyer_id, sender_id, read_at').eq('buyer_id', state.deviceId) ];
+      if(myListingIds.length) queries.push(sb.from('messages').select('listing_id, job_id, buyer_id, sender_id, read_at').in('listing_id', myListingIds));
+      if(myJobIds.length) queries.push(sb.from('messages').select('listing_id, job_id, buyer_id, sender_id, read_at').in('job_id', myJobIds));
+      const results = await Promise.all(queries);
+      const rows = results.flatMap(r=>r.data||[]);
+      const unreadThreadKeys = new Set();
+      rows.forEach(row=>{
+        if(row.sender_id!==state.deviceId && !row.read_at){
+          unreadThreadKeys.add((row.listing_id?'l:'+row.listing_id:'j:'+row.job_id)+'|'+row.buyer_id);
+        }
+      });
+      state.unreadCount = unreadThreadKeys.size;
+    }catch(e){ state.unreadCount = 0; }
+    render();
   }
   async function saveTheme(){ try{ localStorage.setItem('ellaka_theme', state.theme); }catch(e){} }
   async function saveLang(){ try{ localStorage.setItem('ellaka_lang', state.lang); }catch(e){} }
@@ -1442,6 +1486,11 @@
         text: row.body||'', image: row.image_url||'', video: row.video_url||'',
         ts: new Date(row.created_at).getTime(), name: '',
       }));
+      // mark the other person's messages here as read, then refresh the
+      // little unread-count badge so it drops as soon as I actually open this.
+      sb.from('messages').update({read_at: new Date().toISOString()})
+        .eq('listing_id', listingId).eq('buyer_id', buyerDeviceId).neq('sender_id', state.deviceId).is('read_at', null)
+        .then(()=> refreshUnreadCount());
     }catch(e){ state.chatMessages = []; }
     render();
   }
@@ -1461,6 +1510,9 @@
         text: row.body||'', image: row.image_url||'', video: row.video_url||'',
         ts: new Date(row.created_at).getTime(), name: '',
       }));
+      sb.from('messages').update({read_at: new Date().toISOString()})
+        .eq('job_id', jobId).eq('buyer_id', buyerDeviceId).neq('sender_id', state.deviceId).is('read_at', null)
+        .then(()=> refreshUnreadCount());
     }catch(e){ state.chatMessages = []; }
     render();
   }
@@ -1543,6 +1595,8 @@
           listingName: subjectName || '',
           role: iAmBuyer ? 'buyer' : 'seller',
           peerName,
+          peerRole: peerId ? peerRoleLabel(peerId) : '',
+          unread: row.sender_id!==state.deviceId && !row.read_at,
           preview: row.body || (row.image_url ? '📷' : (row.video_url ? '🎥' : '')),
           ts: new Date(row.created_at).getTime(),
         };
@@ -1991,7 +2045,7 @@
           <button class="elk-theme-btn" id="elk-refresh-btn" title="${t('refreshTitle')}">🔄</button>
           <button class="elk-theme-btn" id="elk-theme-btn">${state.theme==='dark'?'☀️':'🌙'}</button>
           <select class="elk-lang-btn" id="elk-lang-select" title="Language / ভাষা">${LANGUAGES.map(l=>`<option value="${l.code}" ${state.lang===l.code?'selected':''}>${l.name}</option>`).join('')}</select>
-          <button class="elk-theme-btn" id="elk-inbox-btn" title="${t('inboxBtnTitle')}">💬</button>
+          <span class="elk-inbox-btn-wrap"><button class="elk-theme-btn" id="elk-inbox-btn" title="${t('inboxBtnTitle')}">💬</button>${state.unreadCount>0 ? `<span class="elk-inbox-badge">${state.unreadCount>9?'9+':state.unreadCount}</span>` : ''}</span>
           <button class="elk-theme-btn elk-profile-btn-avatar" id="elk-profile-btn" title="${t('profileBtnTitle')}">${state.myProfilePhoto ? `<img src="${escapeHtml(state.myProfilePhoto)}" onerror="this.parentElement.textContent='👤'">` : '👤'}</button>
         </div>
       </div>
@@ -2365,6 +2419,7 @@
           ? `<button class="elk-ghost-btn" data-unblock-user="${escapeHtml(l.ownerDeviceId)}">${t('unblockBtn')}</button>`
           : `<button class="elk-ghost-btn" style="color:var(--red); border-color:var(--red);" data-block-user="${escapeHtml(l.ownerDeviceId)}">${t('blockBtn')}</button>`
         ) : ''}
+        ${isOtherOwner ? `<button class="elk-ghost-btn" data-report-user="${escapeHtml(l.ownerDeviceId)}">${t('reportBtn')}</button>` : ''}
       </div>
     </div>`;
   }
@@ -2640,7 +2695,7 @@
           threads.length===0 ? `<div class="elk-empty">${t('noInboxMessages')}</div>` :
           threads.map(th=>`
           <div class="elk-peer-card" data-inbox-thread="1" data-context="${th.contextType}" data-listing="${escapeHtml(th.listingId||'')}" data-job="${escapeHtml(th.jobId||'')}" data-buyer="${escapeHtml(th.buyerId)}" style="cursor:pointer;">
-            <div class="elk-admin-menu-btn"><span class="ic">💬</span><span class="lbl">${escapeHtml(th.peerName || th.listingName || '—')}
+            <div class="elk-admin-menu-btn"><span class="ic">💬${th.unread ? '<span class=\"elk-unread-dot\"></span>' : ''}</span><span class="lbl" style="${th.unread?'font-weight:700;':''}">${escapeHtml(th.peerName || th.listingName || '—')}${th.peerRole ? ` <span style="font-weight:400; opacity:.7; font-size:.85em;">(${escapeHtml(th.peerRole)})</span>` : ''}
               <div class="elk-peer-area">${th.role==='buyer'?t('inboxBuyerTag'):t('inboxSellerTag')}${th.listingName && th.role==='seller' ? ' · '+escapeHtml(th.listingName) : ''}</div>
               <div class="elk-peer-area" style="opacity:.8;">${escapeHtml((th.preview||'').slice(0,60))}</div>
             </span></div>
@@ -2665,12 +2720,16 @@
     <div class="elk-modal-backdrop" id="elk-chat-backdrop">
       <div class="elk-modal elk-chat-modal" onclick="event.stopPropagation()">
         <div class="elk-sheet-head" style="margin-bottom:8px;">
-          <h3 style="margin:0;">${t('chatModalTitle')} — ${escapeHtml(subjectName)}</h3>
+          <div>
+            <h3 style="margin:0;">${t('chatModalTitle')} — ${escapeHtml(subjectName)}</h3>
+            ${otherPartyId ? `<div class="elk-peer-area" style="margin-top:2px;">${escapeHtml(peerRoleLabel(otherPartyId))}</div>` : ''}
+          </div>
           ${otherPartyId ? (
             iBlockedThem
             ? `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px;" data-unblock-user="${escapeHtml(otherPartyId)}">${t('unblockBtn')}</button>`
             : `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px; color:var(--red); border-color:var(--red);" data-block-user="${escapeHtml(otherPartyId)}">${t('blockBtn')}</button>`
           ) : ''}
+          ${otherPartyId ? `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px;" data-report-user="${escapeHtml(otherPartyId)}">${t('reportBtn')}</button>` : ''}
         </div>
         <div class="elk-chat-thread" id="elk-chat-thread">
           ${msgs.length ? msgs.map(m=>`<div class="elk-chat-msg ${m.from===viewerRole?'me':'them'}">
@@ -3334,6 +3393,20 @@
         await unblockDevice(b.dataset.unblockUser);
         toast(t('toastUserUnblocked'));
         render();
+      };
+    });
+    // ---------- added: report a user (reviewed manually via Supabase) ----------
+    document.querySelectorAll('[data-report-user]').forEach(b=>{
+      b.onclick = async (e)=>{
+        e.stopPropagation();
+        const reportedId = b.dataset.reportUser;
+        const raw = window.prompt(t('reportReasonPrompt'));
+        if(raw===null) return; // user cancelled
+        const reason = raw.trim();
+        try{
+          await sb.from('reports').insert({ reporter_id: state.deviceId, reported_user_id: reportedId, reason });
+          toast(t('toastReported'));
+        }catch(err){ toast(t('toastReported')); } // fail quiet — reporting should never feel broken to the user
       };
     });
 
