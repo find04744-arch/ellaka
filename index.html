@@ -629,7 +629,7 @@
       confirmDeleteProfile:"আপনার এই ব্যক্তিগত প্রোফাইলটি (নাম, ফোন, হোয়াটসঅ্যাপ, ফেসবুক, এলাকা) স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।",
       toastProfileDeleted:"🗑️ আপনার প্রোফাইল স্থায়ীভাবে মুছে ফেলা হয়েছে।",
       toastDuplicateName:"⚠️ এই দেশ, জেলা ও এলাকায় এই নামে ইতিমধ্যে আরেকটি প্রোফাইল/ব্যবসা আছে। অনুগ্রহ করে নামের কিছুটা পরিবর্তন করুন, অথবা ভিন্ন এলাকা বেছে নিন।",
-      messageBtn:"💬 মালিকের সাথে কথা বলুন", jobMessageBtn:"💬", jobMessageBtnAria:"মেসেজ পাঠান", chatModalTitle:"চ্যাট",
+      messageBtn:"💬", jobMessageBtn:"💬", jobMessageBtnAria:"মেসেজ পাঠান", chatModalTitle:"চ্যাট",
       chatPlaceholder:"মেসেজ লিখুন…", sendBtn:"পাঠান",
       noChats:"এখনো কোনো মেসেজ নেই।", chatWithLabel:"কথোপকথন", chatsTitle:"মেসেজসমূহ",
       blockBtn:"🚫 ব্লক করুন", unblockBtn:"🔓 আনব্লক করুন",
@@ -862,7 +862,7 @@
       confirmDeleteProfile:"Permanently delete your personal profile (name, phone, WhatsApp, Facebook, area)? This can't be undone.",
       toastProfileDeleted:"🗑️ Your profile has been permanently deleted.",
       toastDuplicateName:"⚠️ A profile/business with this name already exists in this country, district, and area. Please change the name slightly, or choose a different area.",
-      messageBtn:"💬 Message the owner", jobMessageBtn:"💬", jobMessageBtnAria:"Send a message", chatModalTitle:"Chat",
+      messageBtn:"💬", jobMessageBtn:"💬", jobMessageBtnAria:"Send a message", chatModalTitle:"Chat",
       chatPlaceholder:"Type a message…", sendBtn:"Send",
       noChats:"No messages yet.", chatWithLabel:"Conversation", chatsTitle:"Messages",
       blockBtn:"🚫 Block", unblockBtn:"🔓 Unblock",
@@ -1853,7 +1853,10 @@
     if(!q) return [];
     const qWords = q.split(/\s+/).filter(Boolean);
     const qWordsPhon = qWords.map(phoneticOf);
-    return visibleListings().map(l=>{
+    // Exclude the searcher's own posts from their own search results — seeing
+    // your own listing/profile when you're looking for something you need is
+    // confusing, not useful, since you already know you posted it.
+    return visibleListings().filter(l=> l.ownerDeviceId!==state.deviceId).map(l=>{
       const productCaptions = (l.products||[]).map(p=>p.caption||'').join(' ');
       // include blood group, location (country/district/area) and skills in the
       // searchable text too, so queries like "O+ blood lagbe uttorar" match a
@@ -1880,7 +1883,8 @@
     if(!q) return [];
     const qWords = q.split(/\s+/).filter(Boolean);
     const qWordsPhon = qWords.map(phoneticOf);
-    return state.jobs.map(j=>{
+    // Same as localKeywordSearch — don't show the searcher their own job post.
+    return state.jobs.filter(j=> j.ownerDeviceId!==state.deviceId).map(j=>{
       const hay = (j.title+" "+(j.description||"")+" "+(j.name||"")
         +" "+(j.country||"")+" "+(j.district||"")+" "+(j.area||"")).toLowerCase();
       const hayTokens = hay.split(/[\s,]+/).filter(Boolean);
@@ -1972,7 +1976,7 @@
       </div>
       ${(l.phone || !mine) ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()">
         ${l.phone ? `<a class="elk-call-btn" href="tel:${escapeHtml(l.phone)}">${t('callBtn')}</a>${copyBtn(l.phone)}` : ''}
-        ${!mine ? `<button type="button" class="elk-ghost-btn" style="margin-top:0;" data-msg-listing-card="${l.id}">${t('messageBtn')}</button>` : ''}
+        ${!mine ? `<button type="button" class="elk-icon-msg-btn" title="${t('jobMessageBtnAria')}" aria-label="${t('jobMessageBtnAria')}" data-msg-listing-card="${l.id}">${t('messageBtn')}</button>` : ''}
       </div>` : ''}
     </div>`;
   }
@@ -2346,15 +2350,15 @@
         ${!isPersonCat ? renderProductSearchBox(l) : ''}
         ${blockedPair ? `<div class="elk-warn-banner">${t('profileBlockedNotice')}</div>` : `
         <div class="elk-call-safety-note">${t('safetyWarning')}</div>
-        ${l.phone ? `<div class="elk-contact-row" style="margin-top:8px;">
-          <a class="elk-sheet-call" style="flex:1; margin-top:0;" href="tel:${escapeHtml(l.phone)}">${t('callNow', {p: escapeHtml(l.phone)})}</a>
-          ${copyBtn(l.phone)}
-        </div>` : ''}
+        <div class="elk-contact-row" style="margin-top:8px;">
+          ${l.phone ? `<a class="elk-sheet-call" style="flex:1; margin-top:0;" href="tel:${escapeHtml(l.phone)}">${t('callNow', {p: escapeHtml(l.phone)})}</a>
+          ${copyBtn(l.phone)}` : ''}
+          <button type="button" class="elk-icon-msg-btn" title="${t('jobMessageBtnAria')}" aria-label="${t('jobMessageBtnAria')}" id="elk-msg-owner-btn" data-msg-listing="${l.id}">${t('messageBtn')}</button>
+        </div>
         ${(l.whatsapp || l.facebook) ? `<div class="elk-contact-row">
           ${l.whatsapp ? `<a class="elk-wa-btn" href="${escapeHtml(waLink(l.whatsapp))}" target="_blank" rel="noopener">${t('whatsappBtn')}</a>${copyBtn(l.whatsapp)}` : ''}
           ${l.facebook ? `<a class="elk-fb-btn" href="${escapeHtml(fbLink(l.facebook))}" target="_blank" rel="noopener">${t('facebookBtn')}</a>${copyBtn(l.facebook)}` : ''}
         </div>` : ''}
-        <button class="elk-ghost-btn" id="elk-msg-owner-btn" data-msg-listing="${l.id}">${t('messageBtn')}</button>
         `}
         ${isOtherOwner ? (
           iBlockedThem
