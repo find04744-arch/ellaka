@@ -3259,7 +3259,7 @@
             if(error) throw error;
             state.jobs.unshift(jobRowToObj(inserted));
           }
-        }catch(err){ toast(t('toastRefreshFailed')); return; }
+        }catch(err){ console.error('save error:', err); toast(t('toastRefreshFailed')); return; }
         if(data.country && data.district && data.area) registerLocation(data.country, data.district, data.area);
         state.workView='list'; state.editingJobId=null;
         render();
@@ -3429,7 +3429,7 @@
             newListingId = inserted.id;
             state.listings.unshift(Object.assign(listingRowToObj(inserted), {products:[]}));
           }
-        }catch(err){ toast(t('toastRefreshFailed')); return; }
+        }catch(err){ console.error('save error:', err); toast(t('toastRefreshFailed')); return; }
         if(data.country && data.district && data.area) registerLocation(data.country, data.district, data.area);
         // Donor/worker/teacher profiles are people, not shops — they don't sell
         // products, so there's nothing useful in the "Products & Videos" screen
@@ -3574,7 +3574,7 @@
             if(error) throw error;
             l.products.push(productRowToObj(inserted));
           }
-        }catch(err){ toast(t('toastRefreshFailed')); return; }
+        }catch(err){ console.error('save error:', err); toast(t('toastRefreshFailed')); return; }
         state.editingProductId = null;
         render();
         toast(existing ? t('toastSaved') : t('toastProductAdded'));
