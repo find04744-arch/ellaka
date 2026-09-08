@@ -300,6 +300,7 @@
   .elk-call-safety-note{font-size:11px; color:var(--muted); background:var(--line-soft); border:1px solid var(--line); border-radius:var(--radius-sm); padding:9px 11px; margin:12px 0; line-height:1.55;}
   .elk-room-rate{font-size:13px; font-weight:600; color:var(--marigold-deep); margin:7px 0;}
   .elk-row-price{font-size:12px; color:var(--marigold-deep); font-weight:600; margin-top:3px;}
+  .elk-posted-at{font-size:11px; color:var(--muted); margin-top:4px;}
   .elk-product-scroll{display:flex; gap:11px; overflow-x:auto; overflow-y:hidden; padding:2px 2px 8px; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; touch-action:pan-x; scroll-snap-type:x proximity; scrollbar-width:none; -ms-overflow-style:none;}
   .elk-product-scroll::-webkit-scrollbar{display:none; height:0;}
   .elk-product-card{flex:none; width:152px; border:1px solid var(--line); border-radius:var(--radius-md); padding:9px; position:relative; background:var(--panel); box-shadow:var(--shadow-sm); scroll-snap-align:start; transition:box-shadow .15s;}
@@ -620,6 +621,7 @@
       inboxBtnTitle:"মেসেজ", inboxTitle:"মেসেজসমূহ",
       noInboxMessages:"এখনো কোনো মেসেজ নেই। কোনো দোকান/প্রোফাইলে গিয়ে মেসেজ পাঠালে এখানে দেখা যাবে।",
       inboxYouLabel:"আপনি", inboxSellerTag:"বিক্রেতা হিসেবে", inboxBuyerTag:"ক্রেতা হিসেবে",
+      postedTodayAt:"আজ {time} এ পোস্ট করা হয়েছে", postedYesterdayAt:"গতকাল {time} এ পোস্ট করা হয়েছে", postedOnAt:"{date}, {time} এ পোস্ট করা হয়েছে",
       profileModalTitle:"👤 আমার প্রোফাইল",
       profileModalSubtitle:"এই প্রোফাইলটি দিয়ে আপনি ক্রেতা বা বিক্রেতা হিসেবে অ্যাপের মধ্যে অন্যদের সাথে যোগাযোগ করতে পারবেন।",
       myNameLabel:"আপনার নাম", myNamePlaceholder:"যেমন: করিম",
@@ -960,7 +962,7 @@
     deviceId:null,
     myShopView:"list", editingMyListingId:null, productListingId:null,
     myShopChatListingId:null, myShopChatPeers:[], myShopChatProfiles:{},
-    chatListingId:null, chatPeerId:null, chatMessages:[],
+    chatListingId:null, chatJobId:null, chatPeerId:null, chatMessages:[],
     inboxThreads:[], inboxLoading:false,
     myProfileName:"", myProfilePhoto:"", myProfilePhone:"", myProfileWhatsapp:"", myProfileFacebook:"",
     myProfileType:"", myProfileCountry:"", myProfileDistrict:"", myProfileArea:"", checkingSafety:false,
@@ -976,6 +978,22 @@
 
   function uid(p){ return (p||'x') + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  // Areas people type are often hierarchical in practice — someone might save
+  // "Uttora" while someone else saves "Uttora Sector 7" for effectively the
+  // same neighborhood. A plain exact-match filter meant picking "Uttora" would
+  // NEVER show the "Uttora Sector 7" listings (and vice versa), which felt
+  // broken to people searching by the broad name. So: filtering by a broad
+  // value ("uttora") now also includes anything that starts with "uttora "
+  // (a more specific sub-area of it), while filtering by a precise value
+  // ("uttora sector 7") only matches that specific one (and its own
+  // sub-values), never sibling areas like "uttora sector 8".
+  function areaMatchesFilter(listingArea, filterArea){
+    if(!filterArea || filterArea==="সব") return true;
+    const a = (listingArea||'').trim().toLowerCase();
+    const f = filterArea.trim().toLowerCase();
+    if(a===f) return true;
+    return a.startsWith(f+' ') || a.startsWith(f+'-') || a.startsWith(f+',');
+  }
   // added: turn any http(s)/www links typed into the "about you" box into tappable links,
   // so someone can share their Facebook page, website, etc. right there.
   function linkify(text){
@@ -1046,6 +1064,22 @@
     return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
   }
   function avgRating(l){ return l.ratingCount ? l.ratingSum/l.ratingCount : 0; }
+  // Shows "when was this posted" on a card — relative for anything recent
+  // (today/yesterday) and a plain date beyond that, in whichever language is
+  // active, so people can tell a fresh post from an old one at a glance.
+  function formatPostedAt(ts){
+    if(!ts) return '';
+    const d = new Date(ts);
+    const now = new Date();
+    const sameDay = d.toDateString()===now.toDateString();
+    const yest = new Date(now); yest.setDate(now.getDate()-1);
+    const isYesterday = d.toDateString()===yest.toDateString();
+    const timeStr = d.toLocaleTimeString(state.lang==='bn'?'bn-BD':'en-US', {hour:'numeric', minute:'2-digit'});
+    const dateStr = d.toLocaleDateString(state.lang==='bn'?'bn-BD':'en-US', {day:'numeric', month:'short', year: d.getFullYear()!==now.getFullYear() ? 'numeric' : undefined});
+    if(sameDay) return t('postedTodayAt', {time: timeStr});
+    if(isYesterday) return t('postedYesterdayAt', {time: timeStr});
+    return t('postedOnAt', {date: dateStr, time: timeStr});
+  }
   // added: for hotel/resort listings, "starting price" is the lowest price among
   // the room photos posted in Products & Videos; falls back to the old single
   // room-rate number for listings that were saved before rooms had photos.
@@ -1366,7 +1400,7 @@
     return state.listings.filter(l=> l.ownerDeviceId===state.deviceId);
   }
   async function openChat(listingId, buyerDeviceId){
-    state.chatListingId = listingId; state.chatPeerId = buyerDeviceId;
+    state.chatListingId = listingId; state.chatJobId = null; state.chatPeerId = buyerDeviceId;
     state.modal = 'chat'; state.chatMessages = []; state.chatPendingMedia = null;
     render();
     try{
@@ -1382,19 +1416,41 @@
     }catch(e){ state.chatMessages = []; }
     render();
   }
+  // Same idea as openChat, but for a job post instead of a shop/listing —
+  // messages are told apart by job_id vs listing_id in the same table.
+  async function openJobChat(jobId, buyerDeviceId){
+    state.chatJobId = jobId; state.chatListingId = null; state.chatPeerId = buyerDeviceId;
+    state.modal = 'chat'; state.chatMessages = []; state.chatPendingMedia = null;
+    render();
+    try{
+      const { data } = await sb.from('messages').select('*')
+        .eq('job_id', jobId).eq('buyer_id', buyerDeviceId)
+        .order('created_at', {ascending:true});
+      const j = state.jobs.find(x=>x.id===jobId);
+      state.chatMessages = (data||[]).map(row=>({
+        from: row.sender_id === (j && j.ownerDeviceId) ? 'owner' : 'buyer',
+        text: row.body||'', image: row.image_url||'', video: row.video_url||'',
+        ts: new Date(row.created_at).getTime(), name: '',
+      }));
+    }catch(e){ state.chatMessages = []; }
+    render();
+  }
   async function sendChatMessage(text, image, video){
     text = (text||'').trim();
-    if((!text && !image && !video) || !state.chatListingId || !state.chatPeerId) return;
+    if((!text && !image && !video) || (!state.chatListingId && !state.chatJobId) || !state.chatPeerId) return;
     const from = (state.chatPeerId !== state.deviceId) ? 'owner' : 'buyer';
-    const l = state.listings.find(x=>x.id===state.chatListingId);
-    const otherPartyId = from==='owner' ? state.chatPeerId : (l && l.ownerDeviceId);
+    const l = state.chatListingId ? state.listings.find(x=>x.id===state.chatListingId) : null;
+    const j = state.chatJobId ? state.jobs.find(x=>x.id===state.chatJobId) : null;
+    const ownerId = l ? l.ownerDeviceId : (j ? j.ownerDeviceId : null);
+    const otherPartyId = from==='owner' ? state.chatPeerId : ownerId;
     if(otherPartyId && isBlockedWithMe(otherPartyId)){ toast(t('chatBlockedNotice')); return; }
     state.chatMessages = state.chatMessages || [];
     state.chatMessages.push({from, text, ts: Date.now(), name: state.myProfileName||'', image: image||'', video: video||''});
     render();
     try{
       await sb.from('messages').insert({
-        listing_id: state.chatListingId, buyer_id: state.chatPeerId, sender_id: state.deviceId,
+        listing_id: state.chatListingId || null, job_id: state.chatJobId || null,
+        buyer_id: state.chatPeerId, sender_id: state.deviceId,
         body: text||null, image_url: image||null, video_url: video||null,
       });
       if(from==='buyer' && state.myProfileName) await saveMyProfile();
@@ -1403,30 +1459,36 @@
   async function loadInbox(){
     // A real "all my conversations in one place" inbox (like Messenger/FB
     // Lite), instead of only being able to see messages one listing at a
-    // time from inside "আমার ব্যবসা". A thread is a unique (listing_id,
-    // buyer_id) pair — I'm in it either because I AM that buyer_id (I
-    // messaged someone as myself), or because I own the listing (someone
-    // messaged one of my listings).
+    // time from inside "আমার ব্যবসা". A thread is a unique (listing_id or
+    // job_id, buyer_id) pair — I'm in it either because I AM that buyer_id (I
+    // messaged someone as myself), or because I own the listing/job (someone
+    // messaged one of mine).
     state.modal = 'inbox'; state.inboxLoading = true; state.inboxThreads = [];
     render();
     try{
       const myListingIds = state.listings.filter(l=>l.ownerDeviceId===state.deviceId).map(l=>l.id);
+      const myJobIds = state.jobs.filter(j=>j.ownerDeviceId===state.deviceId).map(j=>j.id);
       const queries = [ sb.from('messages').select('*').eq('buyer_id', state.deviceId).order('created_at', {ascending:false}) ];
       if(myListingIds.length) queries.push(sb.from('messages').select('*').in('listing_id', myListingIds).order('created_at', {ascending:false}));
+      if(myJobIds.length) queries.push(sb.from('messages').select('*').in('job_id', myJobIds).order('created_at', {ascending:false}));
       const results = await Promise.all(queries);
       const rows = results.flatMap(r=>r.data||[]);
-      // dedupe to one (most recent) row per thread
+      // dedupe to one (most recent) row per thread — a thread key needs both
+      // the context (listing vs job) and its id, since a listing and a job
+      // could otherwise collide on the same buyer_id.
       const byThread = {};
       rows.forEach(row=>{
-        const key = row.listing_id+'|'+row.buyer_id;
+        const key = (row.listing_id ? 'l:'+row.listing_id : 'j:'+row.job_id)+'|'+row.buyer_id;
         const existing = byThread[key];
         if(!existing || new Date(row.created_at).getTime() > new Date(existing.created_at).getTime()) byThread[key] = row;
       });
       const threads = Object.values(byThread);
       const peerIds = Array.from(new Set(threads.map(row=>{
-        const l = state.listings.find(x=>x.id===row.listing_id);
+        const l = row.listing_id ? state.listings.find(x=>x.id===row.listing_id) : null;
+        const j = row.job_id ? state.jobs.find(x=>x.id===row.job_id) : null;
+        const ownerId = l ? l.ownerDeviceId : (j ? j.ownerDeviceId : null);
         const iAmBuyer = row.buyer_id === state.deviceId;
-        return iAmBuyer ? (l && l.ownerDeviceId) : row.buyer_id;
+        return iAmBuyer ? ownerId : row.buyer_id;
       }).filter(Boolean)));
       let profilesById = {};
       if(peerIds.length){
@@ -1434,18 +1496,22 @@
         profilesById = Object.fromEntries((profiles||[]).map(p=>[p.id, p]));
       }
       state.inboxThreads = threads.map(row=>{
-        const l = state.listings.find(x=>x.id===row.listing_id);
+        const l = row.listing_id ? state.listings.find(x=>x.id===row.listing_id) : null;
+        const j = row.job_id ? state.jobs.find(x=>x.id===row.job_id) : null;
+        const subjectName = l ? l.name : (j ? j.title : '');
+        const ownerId = l ? l.ownerDeviceId : (j ? j.ownerDeviceId : null);
         const iAmBuyer = row.buyer_id === state.deviceId;
-        const peerId = iAmBuyer ? (l && l.ownerDeviceId) : row.buyer_id;
+        const peerId = iAmBuyer ? ownerId : row.buyer_id;
         const peerProfile = peerId ? profilesById[peerId] : null;
         // when I'm the buyer, "who am I talking to" is best shown as the shop/
-        // listing name (that's what I recognize); when I'm the seller, show the
-        // buyer's saved profile name if they set one, otherwise a generic label.
-        const peerName = iAmBuyer ? (l ? l.name : (peerProfile && peerProfile.name) || '')
+        // listing/job name (that's what I recognize); when I'm the seller, show
+        // the buyer's saved profile name if they set one, otherwise blank.
+        const peerName = iAmBuyer ? (subjectName || (peerProfile && peerProfile.name) || '')
           : ((peerProfile && peerProfile.name) || '');
         return {
-          listingId: row.listing_id, buyerId: row.buyer_id,
-          listingName: l ? l.name : '',
+          contextType: row.listing_id ? 'listing' : 'job',
+          listingId: row.listing_id, jobId: row.job_id, buyerId: row.buyer_id,
+          listingName: subjectName || '',
           role: iAmBuyer ? 'buyer' : 'seller',
           peerName,
           preview: row.body || (row.image_url ? '📷' : (row.video_url ? '🎥' : '')),
@@ -1778,6 +1844,7 @@
     const hasLoc = l.area && l.district && l.country;
     const locLine = hasLoc ? `${escapeHtml(l.area)}, ${escapeHtml(l.district)}, ${escapeHtml(l.country)}` : '';
     const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher');
+    const mine = l.ownerDeviceId === state.deviceId;
     return `
     <div class="elk-row" data-open="${l.id}">
       <div class="elk-icon-badge">${cat.icon}</div>
@@ -1789,8 +1856,12 @@
         ${l.category==='worker' && l.skills ? `<div class="elk-row-price">${t('skillsLabel')}: ${escapeHtml(l.skills)}</div>` : ''}
         ${l.category==='donor' && l.bloodGroup ? `<div class="elk-donor-group" style="margin-top:4px;">${escapeHtml(l.bloodGroup)}</div>` : ''}
         <div class="elk-stars">${starString(avg)} <span class="cnt">${avg?avg.toFixed(1):t('ratingNew')} (${l.ratingCount||0})</span></div>
+        ${l.createdAt ? `<div class="elk-posted-at">${escapeHtml(formatPostedAt(l.createdAt))}</div>` : ''}
       </div>
-      ${l.phone ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()"><a class="elk-call-btn" href="tel:${escapeHtml(l.phone)}">${t('callBtn')}</a>${copyBtn(l.phone)}</div>` : ''}
+      ${(l.phone || !mine) ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()">
+        ${l.phone ? `<a class="elk-call-btn" href="tel:${escapeHtml(l.phone)}">${t('callBtn')}</a>${copyBtn(l.phone)}` : ''}
+        ${!mine ? `<button type="button" class="elk-ghost-btn" style="margin-top:0;" data-msg-listing-card="${l.id}">${t('messageBtn')}</button>` : ''}
+      </div>` : ''}
     </div>`;
   }
 
@@ -1830,7 +1901,7 @@
       // listing saved as "Uttora", etc.
       if(country!=="সব" && normLoc(l.country)!==normLoc(country)) return false;
       if(district!=="সব" && normLoc(l.district)!==normLoc(district)) return false;
-      if(area!=="সব" && normLoc(l.area)!==normLoc(area)) return false;
+      if(area!=="সব" && !areaMatchesFilter(l.area, area)) return false;
       return true;
     };
     const base = visibleListings();
@@ -1969,7 +2040,7 @@
       if(state.donorGroupFilter!=="সব" && d.bloodGroup!==state.donorGroupFilter) return false;
       if(state.donorCountryFilter!=="সব" && d.country!==state.donorCountryFilter) return false;
       if(state.donorDistrictFilter!=="সব" && d.district!==state.donorDistrictFilter) return false;
-      if(state.donorAreaFilter!=="সব" && d.area!==state.donorAreaFilter) return false;
+      if(state.donorAreaFilter!=="সব" && !areaMatchesFilter(d.area, state.donorAreaFilter)) return false;
       return true;
     });
     return `
@@ -2025,6 +2096,7 @@
         ${j.pay ? `<div class="elk-row-price">${t('jobPayLabel')}: ${escapeHtml(j.pay)}</div>` : ''}
         ${j.description ? `<div class="elk-row-area" style="margin-top:4px;">${escapeHtml(j.description)}</div>` : ''}
         ${j.postType==='seeking' && j.cvUrl ? `<a class="elk-ghost-btn" style="margin-top:8px;" href="${escapeHtml(j.cvUrl)}" target="_blank" rel="noopener" download="${escapeHtml(j.cvFileName||'CV')}">${t('viewCvBtn')}</a>` : ''}
+        ${j.createdAt ? `<div class="elk-posted-at">${escapeHtml(formatPostedAt(j.createdAt))}</div>` : ''}
         ${mine ? `<div class="elk-admin-row-actions" style="margin-top:8px;">
             <button data-edit-job="${j.id}">${t('editBtn')}</button>
             <button class="del" data-del-job="${j.id}">${t('deleteBtn')}</button>
@@ -2032,6 +2104,7 @@
             <a class="elk-ghost-btn" style="margin-top:0;" href="tel:${escapeHtml(j.phone)}">${t('callBtn')}</a>
             ${copyBtn(j.phone)}
             ${j.whatsapp ? `<a class="elk-wa-btn" href="${escapeHtml(waLink(j.whatsapp))}" target="_blank" rel="noopener">${t('whatsappBtn')}</a>${copyBtn(j.whatsapp)}` : ''}
+            <button type="button" class="elk-ghost-btn" style="margin-top:0;" data-msg-job-card="${j.id}">${t('messageBtn')}</button>
           </div>`}
       </div>
     </div>`;
@@ -2085,7 +2158,7 @@
       if(state.workPostTypeFilter!=="all" && j.postType!==state.workPostTypeFilter) return false;
       if(state.workCountryFilter!=="সব" && j.country!==state.workCountryFilter) return false;
       if(state.workDistrictFilter!=="সব" && j.district!==state.workDistrictFilter) return false;
-      if(state.workAreaFilter!=="সব" && j.area!==state.workAreaFilter) return false;
+      if(state.workAreaFilter!=="সব" && !areaMatchesFilter(j.area, state.workAreaFilter)) return false;
       return true;
     }).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     return `
@@ -2099,15 +2172,15 @@
       </div>
       <div class="elk-field" style="margin-top:10px;">
         <label>${t('countryLabel')}</label>
-        ${filterComboHtml('elk-job-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), state.workCountryFilter, t('searchCountryPlaceholder'))}
+        ${filterComboHtml('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), state.workCountryFilter, t('searchCountryPlaceholder'))}
       </div>
       <div class="elk-field">
         <label>${t('districtLabel')}</label>
-        ${filterComboHtml('elk-job-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), state.workDistrictFilter, t('searchDistrictPlaceholder'))}
+        ${filterComboHtml('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), state.workDistrictFilter, t('searchDistrictPlaceholder'))}
       </div>
       <div class="elk-field">
         <label>${t('areaAltLabel')}</label>
-        ${filterComboHtml('elk-job-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.workAreaFilter, t('searchAreaPlaceholder'))}
+        ${filterComboHtml('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.workAreaFilter, t('searchAreaPlaceholder'))}
       </div>
       ${state.jobs.length===0 ? `<div class="elk-empty" style="margin-top:16px;">${t('noJobs')}</div>` :
         list.length===0 ? `<div class="elk-empty" style="margin-top:16px;">${t('jobsEmptyFilterMsg')}</div>` :
@@ -2445,7 +2518,7 @@
         ${state.inboxLoading ? `<div class="elk-spin-line">${t('checkingImage')}</div>` :
           threads.length===0 ? `<div class="elk-empty">${t('noInboxMessages')}</div>` :
           threads.map(th=>`
-          <div class="elk-peer-card" data-inbox-thread="1" data-listing="${escapeHtml(th.listingId)}" data-buyer="${escapeHtml(th.buyerId)}" style="cursor:pointer;">
+          <div class="elk-peer-card" data-inbox-thread="1" data-context="${th.contextType}" data-listing="${escapeHtml(th.listingId||'')}" data-job="${escapeHtml(th.jobId||'')}" data-buyer="${escapeHtml(th.buyerId)}" style="cursor:pointer;">
             <div class="elk-admin-menu-btn"><span class="ic">💬</span><span class="lbl">${escapeHtml(th.peerName || th.listingName || '—')}
               <div class="elk-peer-area">${th.role==='buyer'?t('inboxBuyerTag'):t('inboxSellerTag')}${th.listingName && th.role==='seller' ? ' · '+escapeHtml(th.listingName) : ''}</div>
               <div class="elk-peer-area" style="opacity:.8;">${escapeHtml((th.preview||'').slice(0,60))}</div>
@@ -2455,12 +2528,15 @@
     </div>`;
   }
   function renderChatModal(){
-    if(state.modal!=='chat' || !state.chatListingId) return '';
-    const l = state.listings.find(x=>x.id===state.chatListingId);
-    if(!l) return '';
+    if(state.modal!=='chat' || (!state.chatListingId && !state.chatJobId)) return '';
+    const l = state.chatListingId ? state.listings.find(x=>x.id===state.chatListingId) : null;
+    const j = state.chatJobId ? state.jobs.find(x=>x.id===state.chatJobId) : null;
+    if(!l && !j) return '';
+    const subjectName = l ? l.name : j.title;
+    const ownerId = l ? l.ownerDeviceId : j.ownerDeviceId;
     const msgs = state.chatMessages||[];
     const viewerRole = (state.chatPeerId !== state.deviceId) ? 'owner' : 'buyer';
-    const otherPartyId = viewerRole==='owner' ? state.chatPeerId : l.ownerDeviceId;
+    const otherPartyId = viewerRole==='owner' ? state.chatPeerId : ownerId;
     const iBlockedThem = otherPartyId && blockedByMe(otherPartyId);
     const blockedPair = otherPartyId && isBlockedWithMe(otherPartyId);
     const pending = state.chatPendingMedia;
@@ -2468,7 +2544,7 @@
     <div class="elk-modal-backdrop" id="elk-chat-backdrop">
       <div class="elk-modal elk-chat-modal" onclick="event.stopPropagation()">
         <div class="elk-sheet-head" style="margin-bottom:8px;">
-          <h3 style="margin:0;">${t('chatModalTitle')} — ${escapeHtml(l.name)}</h3>
+          <h3 style="margin:0;">${t('chatModalTitle')} — ${escapeHtml(subjectName)}</h3>
           ${otherPartyId ? (
             iBlockedThem
             ? `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px;" data-unblock-user="${escapeHtml(otherPartyId)}">${t('unblockBtn')}</button>`
@@ -2920,9 +2996,10 @@
     if(inboxClose) inboxClose.onclick = ()=>{ state.modal=null; render(); };
     document.querySelectorAll('[data-inbox-thread]').forEach(el=>{
       el.onclick = ()=>{
-        const listingId = el.dataset.listing, buyerId = el.dataset.buyer;
+        const buyerId = el.dataset.buyer;
         state.modal = null;
-        openChat(listingId, buyerId);
+        if(el.dataset.context==='job') openJobChat(el.dataset.job, buyerId);
+        else openChat(el.dataset.listing, buyerId);
       };
     });
     const profileBackdrop = document.getElementById('elk-profile-backdrop');
@@ -3177,9 +3254,9 @@
       const countries = ["সব", ...distinctCountries()];
       const districts = ["সব", ...distinctDistricts(state.workCountryFilter)];
       const areaOpts = ["সব", ...distinctAreas(state.workCountryFilter, state.workDistrictFilter)];
-      initFilterCombo('elk-job-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.workCountryFilter=val; state.workDistrictFilter='সব'; state.workAreaFilter='সব'; render(); });
-      initFilterCombo('elk-job-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.workDistrictFilter=val; state.workAreaFilter='সব'; render(); });
-      initFilterCombo('elk-job-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.workAreaFilter=val; render(); });
+      initFilterCombo('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.workCountryFilter=val; state.workDistrictFilter='সব'; state.workAreaFilter='সব'; render(); });
+      initFilterCombo('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.workDistrictFilter=val; state.workAreaFilter='সব'; render(); });
+      initFilterCombo('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.workAreaFilter=val; render(); });
     }
     document.querySelectorAll('[data-edit-job]').forEach(b=>{ b.onclick = ()=>{ state.editingJobId=b.dataset.editJob; state.workView='form'; render(); }; });
     document.querySelectorAll('[data-del-job]').forEach(b=>{
@@ -3601,6 +3678,8 @@
 
     const msgOwnerBtn = document.getElementById('elk-msg-owner-btn');
     if(msgOwnerBtn) msgOwnerBtn.onclick = ()=>{ openChat(msgOwnerBtn.dataset.msgListing, state.deviceId); };
+    document.querySelectorAll('[data-msg-listing-card]').forEach(b=>{ b.onclick = (e)=>{ e.stopPropagation(); openChat(b.dataset.msgListingCard, state.deviceId); }; });
+    document.querySelectorAll('[data-msg-job-card]').forEach(b=>{ b.onclick = (e)=>{ e.stopPropagation(); openJobChat(b.dataset.msgJobCard, state.deviceId); }; });
 
     const prodSearchInput = document.getElementById('elk-prod-search-input');
     const prodSearchGo = document.getElementById('elk-prod-search-go');
