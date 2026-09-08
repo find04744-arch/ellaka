@@ -193,6 +193,7 @@
   .elk-contact-row-compact{gap:7px;}
   .elk-contact-row-compact .elk-call-btn, .elk-wa-btn-compact{flex:none; padding:7px 12px; font-size:11.5px; border-radius:var(--radius-sm);}
   .elk-icon-msg-btn{flex:none; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; background:var(--panel); border:1.5px solid var(--line); color:var(--ink); border-radius:50%; font-size:15px; cursor:pointer; padding:0; transition:background .12s, transform .1s, border-color .15s;}
+  .elk-icon-wa-btn{flex:none; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; background:var(--panel); border:1.5px solid #25D366; color:var(--ink); border-radius:50%; font-size:14px; text-decoration:none; padding:0;}
   .elk-unread-dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--red); margin-left:3px; vertical-align:top;}
   .elk-inbox-btn-wrap{position:relative; display:inline-block;}
   .elk-inbox-badge{position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; padding:0 3px; border-radius:8px; background:var(--red); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; line-height:1;}
@@ -546,7 +547,7 @@
       qualificationLabel:"শিক্ষাগত যোগ্যতা ও অভিজ্ঞতা", qualificationPlaceholder:"যেমন: এমএসসি (গণিত), ঢাকা বিশ্ববিদ্যালয় · ৫ বছরের টিউশন অভিজ্ঞতা",
       whatsappLabel:"হোয়াটসঅ্যাপ নম্বর (ঐচ্ছিক)", whatsappLabelRequired:"হোয়াটসঅ্যাপ নম্বর", whatsappPlaceholder:"যেমন: 01711223344",
       facebookLabel:"ফেসবুক আইডি/লিংক (ঐচ্ছিক)", facebookPlaceholder:"যেমন: facebook.com/yourpage",
-      whatsappBtn:"💬 হোয়াটসঅ্যাপ", facebookBtn:"📘 ফেসবুক",
+      whatsappBtn:"💬 হোয়াটসঅ্যাপ", facebookBtn:"📘 ফেসবুক", waIconAria:"হোয়াটসঅ্যাপে মেসেজ করুন",
       descLabel:"নিজের সম্পর্কে লিখুন", descPlaceholder:"নিজের ব্যবসা/সার্ভিস/অভিজ্ঞতা সম্পর্কে লিখুন — চাইলে ফেসবুক পেজ, ওয়েবসাইট বা যেকোনো লিংকও এখানে দিতে পারেন",
       photoLabel:"ছবির লিংক (ঐচ্ছিক)",
       photoLabelUpload:"প্রোফাইল ছবি (ঐচ্ছিক)", choosePhotoBtn:"📷 গ্যালারি থেকে ছবি বেছে নিন", changePhotoBtn:"📷 ছবি পরিবর্তন করুন",
@@ -781,7 +782,7 @@
       qualificationLabel:"Qualifications & experience", qualificationPlaceholder:"e.g. MSc (Math), Dhaka University · 5 years tutoring experience",
       whatsappLabel:"WhatsApp number (optional)", whatsappLabelRequired:"WhatsApp number", whatsappPlaceholder:"e.g. 01711223344",
       facebookLabel:"Facebook ID/link (optional)", facebookPlaceholder:"e.g. facebook.com/yourpage",
-      whatsappBtn:"💬 WhatsApp", facebookBtn:"📘 Facebook",
+      whatsappBtn:"💬 WhatsApp", facebookBtn:"📘 Facebook", waIconAria:"Message on WhatsApp",
       descLabel:"About you", descPlaceholder:"Write about your business/service/experience — you can also add a Facebook page, website, or any link here",
       photoLabel:"Photo link (optional)",
       photoLabelUpload:"Profile Photo (optional)", choosePhotoBtn:"📷 Choose from gallery", changePhotoBtn:"📷 Change photo",
@@ -2028,8 +2029,9 @@
         <div class="elk-stars">${starString(avg)} <span class="cnt">${avg?avg.toFixed(1):t('ratingNew')} (${l.ratingCount||0})</span></div>
         ${l.createdAt ? `<div class="elk-posted-at">${escapeHtml(formatPostedAt(l.createdAt))}</div>` : ''}
       </div>
-      ${(l.phone || !mine) ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()">
+      ${(l.phone || l.whatsapp || !mine) ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()">
         ${l.phone ? `<a class="elk-call-btn" href="tel:${escapeHtml(l.phone)}">${t('callBtn')}</a>${copyBtn(l.phone)}` : ''}
+        ${l.whatsapp ? `<a class="elk-icon-wa-btn" title="${t('waIconAria')}" aria-label="${t('waIconAria')}" href="${escapeHtml(waLink(l.whatsapp))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🟢</a>` : ''}
         ${!mine ? `<button type="button" class="elk-icon-msg-btn" title="${t('jobMessageBtnAria')}" aria-label="${t('jobMessageBtnAria')}" data-msg-listing-card="${l.id}">${t('messageBtn')}</button>` : ''}
       </div>` : ''}
     </div>`;
@@ -2278,7 +2280,7 @@
           </div>` : `<div class="elk-contact-row elk-contact-row-compact">
             <a class="elk-call-btn" href="tel:${escapeHtml(j.phone)}">${t('callBtn')}</a>
             ${copyBtn(j.phone)}
-            ${j.whatsapp ? `<a class="elk-wa-btn elk-wa-btn-compact" href="${escapeHtml(waLink(j.whatsapp))}" target="_blank" rel="noopener">${t('whatsappBtn')}</a>${copyBtn(j.whatsapp)}` : ''}
+            ${j.whatsapp ? `<a class="elk-icon-wa-btn" title="${t('waIconAria')}" aria-label="${t('waIconAria')}" href="${escapeHtml(waLink(j.whatsapp))}" target="_blank" rel="noopener">🟢</a>` : ''}
             <button type="button" class="elk-icon-msg-btn" title="${t('jobMessageBtnAria')}" aria-label="${t('jobMessageBtnAria')}" data-msg-job-card="${j.id}">${t('jobMessageBtn')}</button>
           </div>`}
       </div>
@@ -2286,7 +2288,14 @@
   }
   function renderJobFormView(){
     const editing = state.editingJobId ? state.jobs.find(x=>x.id===state.editingJobId && x.ownerDeviceId===state.deviceId) : null;
-    const j = editing || {postType:'hiring', name:'', title:'', description:'', pay:'', phone:'', whatsapp:'', country:'', district:'', area:'', cvUrl:'', cvFileName:''};
+    // Prefill location from whatever the home "Near You" filter is set to,
+    // so someone who already narrowed the app to their country/district
+    // doesn't have to type it again when posting.
+    const j = editing || {postType:'hiring', name:'', title:'', description:'', pay:'', phone:'', whatsapp:'',
+      country: (state.countryFilter && state.countryFilter!=='সব') ? state.countryFilter : '',
+      district: (state.districtFilter && state.districtFilter!=='সব') ? state.districtFilter : '',
+      area: (state.areaFilter && state.areaFilter!=='সব') ? state.areaFilter : '',
+      cvUrl:'', cvFileName:''};
     const isSeeking = j.postType==='seeking';
     return `
       <span class="elk-back-link" id="elk-work-back">${t('backToWork')}</span>
@@ -2769,7 +2778,11 @@
     // showed up when someone filtered by the category they actually meant
     // (e.g. "মুদির দোকান"). Now a new listing starts with no category picked
     // and the field is required, so it has to be a conscious choice.
-    l = l || {category: prefillCat || '', name:'', country:'', district:'', area:'', phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical', teachingMode:'offline'};
+    l = l || {category: prefillCat || '', name:'',
+      country: (state.countryFilter && state.countryFilter!=='সব') ? state.countryFilter : '',
+      district: (state.districtFilter && state.districtFilter!=='সব') ? state.districtFilter : '',
+      area: (state.areaFilter && state.areaFilter!=='সব') ? state.areaFilter : '',
+      phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical', teachingMode:'offline'};
     const bizType = l.bizType || 'physical';
     return `
       <div class="elk-field"><label>${t('catLabel')}</label>
