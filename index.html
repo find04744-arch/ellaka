@@ -148,18 +148,18 @@
   #ellaka-root.dark .elk-chip.active{color:#FBF6E9; box-shadow:0 4px 12px rgba(0,0,0,.5);}
 
   /* ---------- list rows ---------- */
-  .elk-list{display:flex; flex-direction:column; gap:12px; padding-top:2px;}
-  .elk-row{display:flex; gap:13px; padding:13px 14px; background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius-md); cursor:pointer; box-shadow:var(--shadow-sm); transition:box-shadow .15s var(--ease), transform .1s, border-color .15s;}
+  .elk-list{display:flex; flex-direction:column; gap:9px; padding-top:2px;}
+  .elk-row{display:flex; gap:10px; padding:10px 11px; background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius-md); cursor:pointer; box-shadow:var(--shadow-sm); transition:box-shadow .15s var(--ease), transform .1s, border-color .15s;}
   .elk-row:hover{box-shadow:var(--shadow-md); border-color:var(--line);}
   .elk-row:active{transform:scale(.985);}
-  .elk-icon-badge{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;background:linear-gradient(155deg, var(--line-soft), var(--panel));border:1px solid var(--line);}
+  .elk-icon-badge{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;background:linear-gradient(155deg, var(--line-soft), var(--panel));border:1px solid var(--line);}
   #ellaka-root.dark .elk-icon-badge{background:var(--header-soft); border-color:transparent;}
   .elk-row-body{flex:1; min-width:0; align-self:center;}
-  .elk-row-name{font-size:15px; font-weight:600; letter-spacing:.1px;}
-  .elk-row-area{font-size:12px; color:var(--muted); margin-top:5px;}
+  .elk-row-name{font-size:13.5px; font-weight:600; letter-spacing:.1px;}
+  .elk-row-area{font-size:11px; color:var(--muted); margin-top:3px;}
   .elk-stars{font-size:12px; color:var(--marigold-deep); margin-top:6px;}
   .elk-stars .cnt{color:var(--muted); margin-left:4px;}
-  .elk-call-btn{flex:none; align-self:center; background:var(--marigold); color:#3A2500; border:none; border-radius:var(--radius-sm); padding:8px 14px; font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap; box-shadow:0 2px 8px rgba(184,122,30,.35); transition:transform .1s, box-shadow .15s;}
+  .elk-call-btn{flex:none; align-self:center; background:var(--marigold); color:#3A2500; border:none; border-radius:var(--radius-sm); padding:7px 12px; font-size:11.5px; font-weight:600; text-decoration:none; white-space:nowrap; box-shadow:0 2px 8px rgba(184,122,30,.35); transition:transform .1s, box-shadow .15s;}
   .elk-call-btn:active{transform:scale(.95); box-shadow:0 1px 4px rgba(184,122,30,.35);}
   .elk-empty{text-align:center; padding:48px 24px; color:var(--muted); font-size:13.5px; line-height:1.7;}
   .elk-load-fail{display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(181,75,50,.1); border:1px solid var(--red); border-radius:var(--radius-sm); padding:11px 14px; margin:0 0 14px; font-size:12.5px; color:var(--red); line-height:1.5;}
@@ -182,11 +182,19 @@
   .elk-badge-online{background:rgba(37,110,150,.13); color:#2C7DA0;}
   #ellaka-root.dark .elk-badge-online{background:rgba(120,190,220,.16); color:#8FD1EE;}
   .elk-badge-physical{background:rgba(184,122,30,.13); color:var(--marigold-deep);}
-  .elk-contact-row{display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;}
-  .elk-contact-row a{flex:1; text-align:center; padding:12px; border-radius:var(--radius-md); font-size:13.5px; font-weight:600; text-decoration:none; transition:transform .1s, filter .15s;}
+  .elk-contact-row{display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;}
+  .elk-contact-row a{flex:1; text-align:center; padding:9px 8px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; text-decoration:none; transition:transform .1s, filter .15s;}
   .elk-contact-row a:active{transform:scale(.96);}
   .elk-contact-row a:hover{filter:brightness(1.05);}
   .elk-wa-btn{background:#25D366; color:#08340C; box-shadow:0 2px 8px rgba(37,211,102,.3);}
+  /* compact row used on job cards — buttons only take the width they need
+     instead of stretching full-width, so cards stay small when many people
+     are listed together on screen */
+  .elk-contact-row-compact{gap:7px;}
+  .elk-contact-row-compact .elk-call-btn, .elk-wa-btn-compact{flex:none; padding:7px 12px; font-size:11.5px; border-radius:var(--radius-sm);}
+  .elk-icon-msg-btn{flex:none; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; background:var(--panel); border:1.5px solid var(--line); color:var(--ink); border-radius:50%; font-size:15px; cursor:pointer; padding:0; transition:background .12s, transform .1s, border-color .15s;}
+  .elk-icon-msg-btn:hover{border-color:var(--muted);}
+  .elk-icon-msg-btn:active{transform:scale(.92); background:var(--line-soft);}
   .elk-fb-btn{background:#1877F2; color:#fff; box-shadow:0 2px 8px rgba(24,119,242,.3);}
   .elk-peer-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-md); padding:2px; margin-bottom:12px; box-shadow:var(--shadow-sm); transition:box-shadow .15s;}
   .elk-peer-card:hover{box-shadow:var(--shadow-md);}
@@ -197,7 +205,7 @@
   .elk-submit-btn{width:100%; background:var(--red); color:#FDF2E9; border:none; border-radius:var(--radius-md); padding:14px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px; box-shadow:0 4px 14px rgba(181,75,50,.32); transition:transform .1s, box-shadow .15s, filter .15s;}
   .elk-submit-btn:hover{filter:brightness(1.04);}
   .elk-submit-btn:active{transform:scale(.98); box-shadow:0 1px 5px rgba(181,75,50,.32);}
-  .elk-ghost-btn{width:100%; background:var(--panel); border:1.5px solid var(--line); color:var(--ink); border-radius:var(--radius-md); padding:12px; font-size:14px; cursor:pointer; margin-top:9px; transition:background .12s, transform .1s, border-color .15s;}
+  .elk-ghost-btn{width:100%; background:var(--panel); border:1.5px solid var(--line); color:var(--ink); border-radius:var(--radius-md); padding:10px; font-size:13px; cursor:pointer; margin-top:7px; transition:background .12s, transform .1s, border-color .15s;}
   .elk-ghost-btn:hover{border-color:var(--muted);}
   .elk-ghost-btn:active{transform:scale(.98); background:var(--line-soft);}
   .elk-toast{position:fixed; bottom:88px; left:50%; transform:translateX(-50%); background:var(--header); color:#FBF6E9; padding:11px 20px; border-radius:24px; font-size:13px; z-index:80; max-width:90%; text-align:center; box-shadow:var(--shadow-lg); animation:elkToastIn .2s var(--ease);}
@@ -249,8 +257,8 @@
   .elk-rate-note{font-size:12px; color:var(--muted); margin-bottom:16px;}
   .elk-sheet-call{display:block; text-align:center; background:var(--red); color:#FDF2E9; text-decoration:none; padding:14px; border-radius:var(--radius-md); font-weight:600; font-size:15px; margin-top:8px; box-shadow:0 4px 14px rgba(181,75,50,.32); transition:filter .15s, transform .1s;}
   .elk-sheet-call:active{transform:scale(.98);}
-  .elk-admin-row-actions{display:flex; gap:8px; margin-top:14px;}
-  .elk-admin-row-actions button{flex:1; padding:11px; border-radius:var(--radius-sm); border:1.5px solid var(--line); background:var(--panel); font-size:13px; cursor:pointer; color:var(--ink); transition:transform .1s, border-color .15s;}
+  .elk-admin-row-actions{display:flex; gap:6px; margin-top:9px;}
+  .elk-admin-row-actions button{flex:1; padding:8px; border-radius:var(--radius-sm); border:1.5px solid var(--line); background:var(--panel); font-size:12px; cursor:pointer; color:var(--ink); transition:transform .1s, border-color .15s;}
   .elk-admin-row-actions button:active{transform:scale(.96);}
   .elk-admin-row-actions .del{color:var(--red); border-color:var(--red);}
 
@@ -621,7 +629,7 @@
       confirmDeleteProfile:"আপনার এই ব্যক্তিগত প্রোফাইলটি (নাম, ফোন, হোয়াটসঅ্যাপ, ফেসবুক, এলাকা) স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।",
       toastProfileDeleted:"🗑️ আপনার প্রোফাইল স্থায়ীভাবে মুছে ফেলা হয়েছে।",
       toastDuplicateName:"⚠️ এই দেশ, জেলা ও এলাকায় এই নামে ইতিমধ্যে আরেকটি প্রোফাইল/ব্যবসা আছে। অনুগ্রহ করে নামের কিছুটা পরিবর্তন করুন, অথবা ভিন্ন এলাকা বেছে নিন।",
-      messageBtn:"💬 মালিকের সাথে কথা বলুন", chatModalTitle:"চ্যাট",
+      messageBtn:"💬 মালিকের সাথে কথা বলুন", jobMessageBtn:"💬", jobMessageBtnAria:"মেসেজ পাঠান", chatModalTitle:"চ্যাট",
       chatPlaceholder:"মেসেজ লিখুন…", sendBtn:"পাঠান",
       noChats:"এখনো কোনো মেসেজ নেই।", chatWithLabel:"কথোপকথন", chatsTitle:"মেসেজসমূহ",
       blockBtn:"🚫 ব্লক করুন", unblockBtn:"🔓 আনব্লক করুন",
@@ -854,7 +862,7 @@
       confirmDeleteProfile:"Permanently delete your personal profile (name, phone, WhatsApp, Facebook, area)? This can't be undone.",
       toastProfileDeleted:"🗑️ Your profile has been permanently deleted.",
       toastDuplicateName:"⚠️ A profile/business with this name already exists in this country, district, and area. Please change the name slightly, or choose a different area.",
-      messageBtn:"💬 Message the owner", chatModalTitle:"Chat",
+      messageBtn:"💬 Message the owner", jobMessageBtn:"💬", jobMessageBtnAria:"Send a message", chatModalTitle:"Chat",
       chatPlaceholder:"Type a message…", sendBtn:"Send",
       noChats:"No messages yet.", chatWithLabel:"Conversation", chatsTitle:"Messages",
       blockBtn:"🚫 Block", unblockBtn:"🔓 Unblock",
@@ -1186,7 +1194,7 @@
 
   async function loadAll(){
     try{
-      const { data, error } = await sb.from('listings').select('*, products(*)').order('created_at', {ascending:false});
+      const { data, error } = await sb.from('listings').select('*, products(*)').order('created_at', {ascending:false}).limit(5000);
       if(error) throw error;
       state.listings = (data||[]).map(listingRowToObj);
       // ratings are stored per-row now; pull counts/sums separately so the
@@ -1204,7 +1212,7 @@
 
     try{ const { data } = await sb.from('areas').select('country,district,area'); state.areas = data||[]; }catch(e){ state.areas=[]; }
     try{ const { data } = await sb.from('donors').select('*'); state.donors = data||[]; }catch(e){ state.donors=[]; }
-    try{ const { data } = await sb.from('jobs').select('*').order('created_at', {ascending:false}); state.jobs = (data||[]).map(jobRowToObj); }catch(e){ state.jobs=[]; }
+    try{ const { data } = await sb.from('jobs').select('*').order('created_at', {ascending:false}).limit(5000); state.jobs = (data||[]).map(jobRowToObj); }catch(e){ state.jobs=[]; }
     try{
       const { data } = await sb.from('blocks').select('*').eq('blocker_id', state.deviceId);
       state.blocks = (data||[]).map(b=>({blocker:b.blocker_id, blocked:b.blocked_id}));
@@ -1778,10 +1786,73 @@
     });
   }
 
+  // added: lightweight Bangla-script -> Latin phonetic transliteration, so a
+  // Banglish query typed in English letters (e.g. "dokan sohokari") can find
+  // posts written in Bangla script (e.g. "দোকান সহকারী"), and vice versa.
+  // This is intentionally approximate — it only needs to be close enough for
+  // fuzzy search matching, not a perfectly accurate transliteration.
+  const BN_VOWEL_SIGNS = {'া':'a','ি':'i','ী':'i','ু':'u','ূ':'u','ৃ':'ri','ে':'e','ৈ':'oi','ো':'o','ৌ':'ou'};
+  const BN_INDEP_VOWELS = {'অ':'o','আ':'a','ই':'i','ঈ':'i','উ':'u','ঊ':'u','ঋ':'ri','এ':'e','ঐ':'oi','ও':'o','ঔ':'ou'};
+  const BN_CONSONANTS = {
+    'ক':'k','খ':'kh','গ':'g','ঘ':'gh','ঙ':'ng','চ':'ch','ছ':'ch','জ':'j','ঝ':'jh','ঞ':'n',
+    'ট':'t','ঠ':'th','ড':'d','ঢ':'dh','ণ':'n','ত':'t','থ':'th','দ':'d','ধ':'dh','ন':'n',
+    'প':'p','ফ':'ph','ব':'b','ভ':'bh','ম':'m','য':'j','র':'r','ল':'l','শ':'sh','ষ':'sh',
+    'স':'s','হ':'h','ড়':'r','ঢ়':'rh','য়':'y','ৎ':'t'
+  };
+  function banglaToPhonetic(str){
+    if(!str) return '';
+    const s = String(str);
+    let out = '';
+    for(let i=0;i<s.length;i++){
+      const ch = s[i];
+      if(BN_CONSONANTS[ch]){
+        out += BN_CONSONANTS[ch];
+        const next = s[i+1];
+        if(next==='্'){ i++; } // hasanta: consonant cluster, no inherent vowel
+        else if(next && BN_VOWEL_SIGNS[next]){ out += BN_VOWEL_SIGNS[next]; i++; }
+        else{ out += 'o'; } // inherent vowel
+        continue;
+      }
+      if(BN_INDEP_VOWELS[ch]){ out += BN_INDEP_VOWELS[ch]; continue; }
+      if(ch==='ং'){ out += 'ng'; continue; }
+      if(ch==='ঃ'){ out += 'h'; continue; }
+      if(ch==='ঁ' || ch==='্'){ continue; } // nasal mark / stray hasanta
+      out += ch;
+    }
+    return out;
+  }
+  // added: collapse common spelling variants (both in a Banglish query and in
+  // the phonetic hay text) so e.g. "sohokari"/"shohokari" or "dokan"/"dokaan"
+  // land on the same comparable form.
+  function normalizePhonetic(str){
+    return String(str||'').toLowerCase()
+      .replace(/sh/g,'s').replace(/ph/g,'f').replace(/chh?/g,'c')
+      .replace(/[aeiou]{2,}/g, m=>m[0])
+      .replace(/(.)\1+/g,'$1')
+      .replace(/[^a-z]/g,'');
+  }
+  function phoneticOf(str){ return normalizePhonetic(banglaToPhonetic(str)); }
+  // Shared fuzzy word-match: exact substring, phonetic (Bangla<->Banglish)
+  // substring, and loose stem match on both the literal and phonetic forms.
+  function wordMatches(w, wPhon, hay, hayPhon, hayTokens, hayTokensPhon){
+    if(hay.includes(w)) return true;
+    if(wPhon && wPhon.length>=3 && hayPhon.includes(wPhon)) return true;
+    if(w.length>=3){
+      const stem = w.slice(0, Math.max(3, w.length-2));
+      if(hayTokens.some(tok=> tok.length>=3 && (tok.startsWith(stem) || stem.startsWith(tok.slice(0, Math.max(3, tok.length-2)))))) return true;
+    }
+    if(wPhon && wPhon.length>=3){
+      const pstem = wPhon.slice(0, Math.max(3, wPhon.length-2));
+      if(hayTokensPhon.some(tok=> tok.length>=3 && (tok.startsWith(pstem) || pstem.startsWith(tok.slice(0, Math.max(3, tok.length-2)))))) return true;
+    }
+    return false;
+  }
+
   function localKeywordSearch(q){
     q = q.trim().toLowerCase();
     if(!q) return [];
     const qWords = q.split(/\s+/).filter(Boolean);
+    const qWordsPhon = qWords.map(phoneticOf);
     return visibleListings().map(l=>{
       const productCaptions = (l.products||[]).map(p=>p.caption||'').join(' ');
       // include blood group, location (country/district/area) and skills in the
@@ -1790,16 +1861,12 @@
       const hay = (l.name+" "+l.description+" "+catLabel(l.category)+" "+(l.subjects||"")+" "+productCaptions
         +" "+(l.bloodGroup||"")+" "+(l.country||"")+" "+(l.district||"")+" "+(l.area||"")+" "+(l.skills||"")).toLowerCase();
       const hayTokens = hay.split(/[\s,]+/).filter(Boolean);
+      const hayPhon = phoneticOf(hay);
+      const hayTokensPhon = hayTokens.map(phoneticOf);
       let score=0;
-      qWords.forEach(w=>{
+      qWords.forEach((w,idx)=>{
         if(!w) return;
-        if(hay.includes(w)){ score++; return; }
-        // loose match for Bangla transliteration suffixes, e.g. "uttorar"
-        // (uttora + Bangla possessive "র") should still match area "uttora".
-        if(w.length>=3){
-          const stem = w.slice(0, Math.max(3, w.length-2));
-          if(hayTokens.some(tok=> tok.length>=3 && (tok.startsWith(stem) || stem.startsWith(tok.slice(0, Math.max(3, tok.length-2)))))) score++;
-        }
+        if(wordMatches(w, qWordsPhon[idx], hay, hayPhon, hayTokens, hayTokensPhon)) score++;
       });
       return {l, score};
     }).filter(x=>x.score>0).sort((a,b)=> b.score-a.score || avgRating(b.l)-avgRating(a.l)).map(x=>x.l);
@@ -1812,18 +1879,17 @@
     q = q.trim().toLowerCase();
     if(!q) return [];
     const qWords = q.split(/\s+/).filter(Boolean);
+    const qWordsPhon = qWords.map(phoneticOf);
     return state.jobs.map(j=>{
       const hay = (j.title+" "+(j.description||"")+" "+(j.name||"")
         +" "+(j.country||"")+" "+(j.district||"")+" "+(j.area||"")).toLowerCase();
       const hayTokens = hay.split(/[\s,]+/).filter(Boolean);
+      const hayPhon = phoneticOf(hay);
+      const hayTokensPhon = hayTokens.map(phoneticOf);
       let score=0;
-      qWords.forEach(w=>{
+      qWords.forEach((w,idx)=>{
         if(!w) return;
-        if(hay.includes(w)){ score++; return; }
-        if(w.length>=3){
-          const stem = w.slice(0, Math.max(3, w.length-2));
-          if(hayTokens.some(tok=> tok.length>=3 && (tok.startsWith(stem) || stem.startsWith(tok.slice(0, Math.max(3, tok.length-2)))))) score++;
-        }
+        if(wordMatches(w, qWordsPhon[idx], hay, hayPhon, hayTokens, hayTokensPhon)) score++;
       });
       return {j, score};
     }).filter(x=>x.score>0).sort((a,b)=> b.score-a.score || (b.j.createdAt||0)-(a.j.createdAt||0)).map(x=>x.j);
@@ -2151,11 +2217,11 @@
         ${mine ? `<div class="elk-admin-row-actions" style="margin-top:8px;">
             <button data-edit-job="${j.id}">${t('editBtn')}</button>
             <button class="del" data-del-job="${j.id}">${t('deleteBtn')}</button>
-          </div>` : `<div class="elk-contact-row">
-            <a class="elk-ghost-btn" style="margin-top:0;" href="tel:${escapeHtml(j.phone)}">${t('callBtn')}</a>
+          </div>` : `<div class="elk-contact-row elk-contact-row-compact">
+            <a class="elk-call-btn" href="tel:${escapeHtml(j.phone)}">${t('callBtn')}</a>
             ${copyBtn(j.phone)}
-            ${j.whatsapp ? `<a class="elk-wa-btn" href="${escapeHtml(waLink(j.whatsapp))}" target="_blank" rel="noopener">${t('whatsappBtn')}</a>${copyBtn(j.whatsapp)}` : ''}
-            <button type="button" class="elk-ghost-btn" style="margin-top:0;" data-msg-job-card="${j.id}">${t('messageBtn')}</button>
+            ${j.whatsapp ? `<a class="elk-wa-btn elk-wa-btn-compact" href="${escapeHtml(waLink(j.whatsapp))}" target="_blank" rel="noopener">${t('whatsappBtn')}</a>${copyBtn(j.whatsapp)}` : ''}
+            <button type="button" class="elk-icon-msg-btn" title="${t('jobMessageBtnAria')}" aria-label="${t('jobMessageBtnAria')}" data-msg-job-card="${j.id}">${t('jobMessageBtn')}</button>
           </div>`}
       </div>
     </div>`;
@@ -2946,7 +3012,7 @@
       // anything was wrong — the home page just looked "stuck" with no cards
       // below the category chips. We now check `error` on the listings call
       // specifically and surface a retry banner instead of failing silently.
-      const { data: listingRows, error: listingsErr } = await sb.from('listings').select('*, products(*)').order('created_at', {ascending:false});
+      const { data: listingRows, error: listingsErr } = await sb.from('listings').select('*, products(*)').order('created_at', {ascending:false}).limit(5000);
       if(listingsErr){
         console.error('listings fetch error:', listingsErr);
         state.dataLoadFailed = true;
@@ -2968,7 +3034,7 @@
       }catch(e){ /* ratings are a nice-to-have */ }
       const { data: areaRows } = await sb.from('areas').select('country,district,area'); state.areas = areaRows||[];
       const { data: donorRows } = await sb.from('donors').select('*'); state.donors = donorRows||[];
-      const { data: jobRows } = await sb.from('jobs').select('*').order('created_at', {ascending:false}); state.jobs = (jobRows||[]).map(jobRowToObj);
+      const { data: jobRows } = await sb.from('jobs').select('*').order('created_at', {ascending:false}).limit(5000); state.jobs = (jobRows||[]).map(jobRowToObj);
       const { data: blockRows } = await sb.from('blocks').select('*').eq('blocker_id', state.deviceId);
       state.blocks = (blockRows||[]).map(b=>({blocker:b.blocker_id, blocked:b.blocked_id}));
       render();
