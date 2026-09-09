@@ -641,6 +641,10 @@
       confirmBlockUser:"এই ব্যবহারকারীকে ব্লক করতে চান? ব্লক করলে সে আপনাকে আর মেসেজ দিতে পারবে না, আপনার প্রোফাইলও দেখতে পারবে না।",
       reportBtn:"🚩 রিপোর্ট করুন", reportReasonPrompt:"কেন রিপোর্ট করছেন? (সংক্ষেপে লিখুন)", toastReported:"রিপোর্ট পাঠানো হয়েছে, ধন্যবাদ। আমরা দেখে ব্যবস্থা নেব।",
       generalUserLabel:"সাধারণ ইউজার",
+      listingLimitToast:"একজনের একাউন্টে সর্বোচ্চ ১০টা প্রোফাইল/পোস্ট রাখা যায় (স্প্যাম ঠেকাতে)। পুরনো কোনোটা মুছে তারপর নতুন যোগ করো।",
+      jobLimitToast:"একজনের একাউন্টে সর্বোচ্চ ১০টা জব পোস্ট রাখা যায় (স্প্যাম ঠেকাতে)। পুরনো কোনোটা মুছে তারপর নতুন যোগ করো।",
+      productLimitToast:"একটা দোকান/প্রোফাইলে সর্বোচ্চ ১৫টা ছবি/প্রোডাক্ট রাখা যায় (স্প্যাম ঠেকাতে)। পুরনো কোনোটা মুছে তারপর নতুন যোগ করো।",
+      emailAccountLimitError:"এই জিমেইল দিয়ে ইতিমধ্যে ৩টা একাউন্ট খোলা হয়ে গেছে — একটা জিমেইল দিয়ে সর্বোচ্চ ৩টা একাউন্ট খোলা যায়।",
       toastUserBlocked:"ব্লক করা হয়েছে।", toastUserUnblocked:"আনব্লক করা হয়েছে।",
       profileBlockedNotice:"এই প্রোফাইলের সাথে যোগাযোগ বন্ধ রাখা হয়েছে (ব্লক করা)।",
       chatBlockedNotice:"এই ব্যবহারকারীর সাথে আপনার ব্লক সম্পর্ক আছে, তাই মেসেজ চালাচালি বন্ধ রাখা হয়েছে।",
@@ -877,6 +881,10 @@
       confirmBlockUser:"Block this user? They won't be able to message you or see your profile anymore.",
       reportBtn:"🚩 Report", reportReasonPrompt:"Why are you reporting this? (short reason)", toastReported:"Report sent, thank you — we'll review it.",
       generalUserLabel:"General user",
+      listingLimitToast:"An account can have at most 10 profiles/posts (to prevent spam). Delete an old one before adding a new one.",
+      jobLimitToast:"An account can have at most 10 job posts (to prevent spam). Delete an old one before adding a new one.",
+      productLimitToast:"A shop/profile can have at most 15 photos/products (to prevent spam). Delete an old one before adding a new one.",
+      emailAccountLimitError:"This Gmail address has already created 3 accounts — that's the maximum allowed per Gmail address.",
       toastUserBlocked:"Blocked.", toastUserUnblocked:"Unblocked.",
       profileBlockedNotice:"Contact with this profile is turned off (blocked).",
       chatBlockedNotice:"You and this user have a block between you, so messaging is turned off.",
@@ -1151,6 +1159,17 @@
     const zone = document.getElementById('elk-toast-zone');
     const el = document.createElement('div'); el.className='elk-toast'; el.textContent=msg;
     zone.appendChild(el); setTimeout(()=>el.remove(), 2600);
+  }
+  // added: turns the plain-text exceptions raised by our spam-limit DB
+  // triggers (see the SQL migration) into a friendly toast instead of the
+  // generic "something went wrong" message. Returns true if it recognized
+  // and handled the error, so callers know not to show a second toast.
+  function friendlyLimitToast(err){
+    const msg = (err && err.message) || '';
+    if(msg.includes('listing_limit_reached')){ toast(t('listingLimitToast')); return true; }
+    if(msg.includes('job_limit_reached')){ toast(t('jobLimitToast')); return true; }
+    if(msg.includes('product_limit_reached')){ toast(t('productLimitToast')); return true; }
+    return false;
   }
   function applyTheme(){
     const root = document.getElementById('ellaka-root');
@@ -2605,7 +2624,10 @@
           const name = (fd.get('name')||'').trim();
           const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ name } } });
           state.authBusy=false;
-          if(error){ state.authError = error.message; render(); return; }
+          if(error){
+            state.authError = (error.message||'').includes('email_account_limit_reached') ? t('emailAccountLimitError') : error.message;
+            render(); return;
+          }
           if(data && data.user && !data.session){
             // email confirmation required before a session exists
             state.authInfo = t('authCheckEmailToConfirm');
@@ -3562,7 +3584,7 @@
             if(error) throw error;
             state.jobs.unshift(jobRowToObj(inserted));
           }
-        }catch(err){ console.error('save error:', err); toast(t('toastRefreshFailed')); return; }
+        }catch(err){ console.error('save error:', err); if(!friendlyLimitToast(err)) toast(t('toastRefreshFailed')); return; }
         if(data.country && data.district && data.area) registerLocation(data.country, data.district, data.area);
         state.workView='list'; state.editingJobId=null;
         render();
@@ -3732,7 +3754,7 @@
             newListingId = inserted.id;
             state.listings.unshift(Object.assign(listingRowToObj(inserted), {products:[]}));
           }
-        }catch(err){ console.error('save error:', err); toast(t('toastRefreshFailed')); return; }
+        }catch(err){ console.error('save error:', err); if(!friendlyLimitToast(err)) toast(t('toastRefreshFailed')); return; }
         if(data.country && data.district && data.area) registerLocation(data.country, data.district, data.area);
         // Donor/worker/teacher profiles are people, not shops — they don't sell
         // products, so there's nothing useful in the "Products & Videos" screen
@@ -3877,7 +3899,7 @@
             if(error) throw error;
             l.products.push(productRowToObj(inserted));
           }
-        }catch(err){ console.error('save error:', err); toast(t('toastRefreshFailed')); return; }
+        }catch(err){ console.error('save error:', err); if(!friendlyLimitToast(err)) toast(t('toastRefreshFailed')); return; }
         state.editingProductId = null;
         render();
         toast(existing ? t('toastSaved') : t('toastProductAdded'));
