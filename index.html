@@ -645,6 +645,7 @@
       jobLimitToast:"একজনের একাউন্টে সর্বোচ্চ ১০টা জব পোস্ট রাখা যায় (স্প্যাম ঠেকাতে)। পুরনো কোনোটা মুছে তারপর নতুন যোগ করো।",
       productLimitToast:"একটা দোকান/প্রোফাইলে সর্বোচ্চ ১৫টা ছবি/প্রোডাক্ট রাখা যায় (স্প্যাম ঠেকাতে)। পুরনো কোনোটা মুছে তারপর নতুন যোগ করো।",
       emailAccountLimitError:"এই জিমেইল দিয়ে ইতিমধ্যে ৩টা একাউন্ট খোলা হয়ে গেছে — একটা জিমেইল দিয়ে সর্বোচ্চ ৩টা একাউন্ট খোলা যায়।",
+      duplicatePostToast:"একই এলাকা থেকে প্রায় একই রকম পোস্ট তোমার আগে থেকেই আছে। নতুন করে পোস্ট করতে হলে অন্য ক্যাটাগরি বেছে নাও, অথবা লেখাটা যথেষ্ট আলাদা করে লেখো।",
       toastUserBlocked:"ব্লক করা হয়েছে।", toastUserUnblocked:"আনব্লক করা হয়েছে।",
       profileBlockedNotice:"এই প্রোফাইলের সাথে যোগাযোগ বন্ধ রাখা হয়েছে (ব্লক করা)।",
       chatBlockedNotice:"এই ব্যবহারকারীর সাথে আপনার ব্লক সম্পর্ক আছে, তাই মেসেজ চালাচালি বন্ধ রাখা হয়েছে।",
@@ -885,6 +886,7 @@
       jobLimitToast:"An account can have at most 10 job posts (to prevent spam). Delete an old one before adding a new one.",
       productLimitToast:"A shop/profile can have at most 15 photos/products (to prevent spam). Delete an old one before adding a new one.",
       emailAccountLimitError:"This Gmail address has already created 3 accounts — that's the maximum allowed per Gmail address.",
+      duplicatePostToast:"You already have a very similar post from the same area. To post again, pick a different category, or make the text clearly different.",
       toastUserBlocked:"Blocked.", toastUserUnblocked:"Unblocked.",
       profileBlockedNotice:"Contact with this profile is turned off (blocked).",
       chatBlockedNotice:"You and this user have a block between you, so messaging is turned off.",
@@ -1169,6 +1171,7 @@
     if(msg.includes('listing_limit_reached')){ toast(t('listingLimitToast')); return true; }
     if(msg.includes('job_limit_reached')){ toast(t('jobLimitToast')); return true; }
     if(msg.includes('product_limit_reached')){ toast(t('productLimitToast')); return true; }
+    if(msg.includes('duplicate_post_reached')){ toast(t('duplicatePostToast')); return true; }
     return false;
   }
   function applyTheme(){
