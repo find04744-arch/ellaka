@@ -302,6 +302,10 @@
   .elk-donor-card{border:1px solid var(--line); border-radius:var(--radius-md); padding:13px 15px; margin-bottom:10px; display:flex; align-items:center; gap:13px; background:var(--panel); box-shadow:var(--shadow-sm); transition:box-shadow .15s;}
   .elk-donor-card:hover{box-shadow:var(--shadow-md);}
   .elk-donor-group{width:46px;height:46px;min-width:46px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;line-height:1;flex:none; box-shadow:0 3px 8px rgba(181,75,50,.32); overflow:hidden; white-space:nowrap; padding:0; text-align:center;}
+  .elk-teacher-badges{display:flex; flex-wrap:wrap; gap:5px; margin:6px 0;}
+  .elk-teacher-badge{background:rgba(232,163,61,.16); color:var(--marigold-deep); border:1px solid rgba(232,163,61,.4); border-radius:20px; padding:3px 10px; font-size:11.5px; font-weight:600;}
+  .elk-teacher-badge-class{background:rgba(31,73,65,.1); color:var(--header); border-color:rgba(31,73,65,.3);}
+  #ellaka-root.dark .elk-teacher-badge-class{color:var(--marigold);}
   .elk-security-note{font-size:11px; color:var(--muted); background:var(--line-soft); border:1px solid var(--line); border-radius:var(--radius-sm); padding:9px 11px; margin-top:12px; line-height:1.55;}
   .elk-locked-box{text-align:center; padding:48px 20px;}
   .elk-locked-box .big{font-size:42px; margin-bottom:12px;}
@@ -536,6 +540,8 @@
       logoutBtn2:"লগআউট করুন",
       bizTypeLabel:"ব্যবসার ধরন", bizTypePhysical:"🏬 সরাসরি দোকান আছে (ক্রেতা গিয়ে দেখে কিনতে পারবে)",
       bizTypeOnline:"🌐 শুধু অনলাইনে ব্যবসা (কোনো দোকান নেই)",
+      bizTypePhysicalService:"🏬 দোকানে/স্পটে গিয়ে সরাসরি সেবা নেওয়া যায়",
+      bizTypeOnlineService:"🌐 বাড়িতে গিয়ে বা অনলাইনে সেবা দেওয়া হয় (নির্দিষ্ট দোকান নেই)",
       onlineBadge:"🌐 অনলাইন ব্যবসা", physicalBadge:"🏬 সরাসরি দোকান",
       countryLabel:"দেশ", countryPlaceholder:"যেমন: Bangladesh",
       districtLabel:"জেলা", districtPlaceholder:"যেমন: গাজীপুর",
@@ -546,6 +552,14 @@
       phoneLabel:"ফোন নম্বর", subjectsLabel:"বিষয়সমূহ (কমা দিয়ে)", subjectsPlaceholder:"যেমন: গণিত, পদার্থবিজ্ঞান",
       teachModeLabel:"পড়ানোর ধরন", teachModeOnline:"💻 অনলাইনে ক্লাস", teachModeOffline:"🏠 বাসায়/সরাসরি পড়ান", teachModeBoth:"✅ দুটোই",
       qualificationLabel:"শিক্ষাগত যোগ্যতা ও অভিজ্ঞতা", qualificationPlaceholder:"যেমন: এমএসসি (গণিত), ঢাকা বিশ্ববিদ্যালয় · ৫ বছরের টিউশন অভিজ্ঞতা",
+      classRangeLabel:"কোন ক্লাস থেকে কোন ক্লাস পর্যন্ত পড়ান", classRangePlaceholder:"যেমন: ৩য় শ্রেণি থেকে ১০ম শ্রেণি / SSC",
+      hideListingToggleLabel:"এই প্রোফাইলটি সবার কাছ থেকে আড়াল করে রাখো",
+      hideListingToggleHint:"চালু করলে এই প্রোফাইল/পোস্টটি অন্য কেউ (হোম, সার্চ, কোনোভাবেই) দেখতে পাবে না — শুধু তুমি নিজে এখানে ব্যবস্থাপনার জন্য দেখতে পারবে। বন্ধ করলে আগের মতো সবাই দেখতে পারবে। এটা সম্পূর্ণ ব্যক্তিগত — তুমি শুধু তোমার নিজের প্রোফাইলের এই বাটন চালাতে/দেখতে পারবে, অন্য কারো নয়।",
+      hiddenBadge:"🙈 আড়ালে আছে",
+      toastListingHidden:"প্রোফাইলটি আড়াল করা হয়েছে — আর কেউ এটা দেখতে পাবে না।",
+      toastListingUnhidden:"প্রোফাইলটি আবার সবার কাছে দৃশ্যমান করা হয়েছে।",
+      hideAllToggleLabel:"আমার সব প্রোফাইল/পোস্ট সবার কাছ থেকে আড়াল করে রাখো",
+      hideAllToggleHint:"চালু করলে তোমার সব প্রোফাইল/পোস্ট আর জব পোস্ট — একসাথে সবগুলো — কেউ (হোম, সার্চ, কোনোভাবেই) দেখতে পাবে না, শুধু তুমি নিজে দেখতে পারবে। এটা সম্পূর্ণ ব্যক্তিগত — এই বাটন শুধু তোমার নিজের একাউন্টের জন্য কাজ করে, অন্য কারো জন্য না।",
       whatsappLabel:"হোয়াটসঅ্যাপ নম্বর (ঐচ্ছিক)", whatsappLabelRequired:"হোয়াটসঅ্যাপ নম্বর", whatsappPlaceholder:"যেমন: 01711223344",
       facebookLabel:"ফেসবুক আইডি/লিংক (ঐচ্ছিক)", facebookPlaceholder:"যেমন: facebook.com/yourpage",
       whatsappBtn:"💬 হোয়াটসঅ্যাপ", facebookBtn:"📘 ফেসবুক", waIconAria:"হোয়াটসঅ্যাপে মেসেজ করুন",
@@ -778,6 +792,8 @@
       logoutBtn2:"Log out",
       bizTypeLabel:"Business type", bizTypePhysical:"🏬 Has a physical shop (customers can visit and check products)",
       bizTypeOnline:"🌐 Online-only business (no shop)",
+      bizTypePhysicalService:"🏬 Service given in-person at a shop/spot",
+      bizTypeOnlineService:"🌐 Service given at the customer's home or online (no fixed shop)",
       onlineBadge:"🌐 Online business", physicalBadge:"🏬 Physical shop",
       countryLabel:"Country", countryPlaceholder:"e.g. Bangladesh",
       districtLabel:"District", districtPlaceholder:"e.g. Gazipur",
@@ -787,6 +803,14 @@
       locationOptionalHint:"Sharing your area is optional — it's fine to skip it. Adding it helps nearby buyers find you.",
       phoneLabel:"Phone number", subjectsLabel:"Subjects (comma separated)", subjectsPlaceholder:"e.g. Math, Physics",
       qualificationLabel:"Qualifications & experience", qualificationPlaceholder:"e.g. MSc (Math), Dhaka University · 5 years tutoring experience",
+      classRangeLabel:"Which classes/grades do you teach", classRangePlaceholder:"e.g. Class 3 to Class 10 / SSC",
+      hideListingToggleLabel:"Hide this profile from everyone else",
+      hideListingToggleHint:"Turn this on and no one else can see this profile/post anywhere (home, search, nowhere) — only you can still see it here to manage it. Turn it off and everyone can see it again like before. This is fully personal — you can only turn this on/off for your own profile, never anyone else's.",
+      hiddenBadge:"🙈 Hidden",
+      toastListingHidden:"Profile hidden — no one else can see it now.",
+      toastListingUnhidden:"Profile made visible to everyone again.",
+      hideAllToggleLabel:"Hide all my profiles/posts from everyone else",
+      hideAllToggleHint:"Turn this on and ALL of your profiles/posts and job posts — everything at once — become invisible to everyone else (home, search, nowhere), only you can still see them. This is fully personal — this only affects your own account, never anyone else's.",
       whatsappLabel:"WhatsApp number (optional)", whatsappLabelRequired:"WhatsApp number", whatsappPlaceholder:"e.g. 01711223344",
       facebookLabel:"Facebook ID/link (optional)", facebookPlaceholder:"e.g. facebook.com/yourpage",
       whatsappBtn:"💬 WhatsApp", facebookBtn:"📘 Facebook", waIconAria:"Message on WhatsApp",
@@ -1025,7 +1049,7 @@
     myShopView:"list", editingMyListingId:null, productListingId:null,
     myShopChatListingId:null, myShopChatPeers:[], myShopChatProfiles:{},
     chatListingId:null, chatJobId:null, chatPeerId:null, chatMessages:[],
-    inboxThreads:[], inboxLoading:false, unreadCount:0,
+    inboxThreads:[], inboxLoading:false, unreadCount:0, globallyHiddenOwnerIds: new Set(), myProfileHideAll:false,
     myProfileName:"", myProfilePhoto:"", myProfilePhone:"", myProfileWhatsapp:"", myProfileFacebook:"",
     myProfileType:"", myProfileCountry:"", myProfileDistrict:"", myProfileArea:"", checkingSafety:false,
     productSearchQuery:"", productSearchResult:null,
@@ -1150,6 +1174,9 @@
   // school, hotel, resort, or park can't be "online-only, no premises") so the
   // physical/online choice is hidden and forced to physical for these.
   function isFixedPlaceCat(cat){ return cat==='hospital' || cat==='school' || cat==='hotel' || cat==='resort' || cat==='park'; }
+  // added: these categories sell a SERVICE, not a product someone "buys" —
+  // the physical/online wording needs to say so, or it reads like a shop.
+  function isServiceCat(cat){ return cat==='salon' || cat==='welding' || cat==='laundry' || cat==='tailor' || cat==='electrician' || cat==='plumber' || cat==='ac'; }
   function startingPrice(l){
     const prices = (l.products||[]).map(p=>parseFloat(p.price)).filter(n=>!isNaN(n) && isFinite(n));
     if(prices.length) return Math.min(...prices);
@@ -1193,11 +1220,11 @@
       id: row.id, ownerDeviceId: row.owner_id, category: row.category, name: row.name,
       bizType: row.biz_type, country: row.country, district: row.district, area: row.area,
       mapQuery: row.map_query, phone: row.phone, whatsapp: row.whatsapp, facebook: row.facebook,
-      subjects: row.subjects, qualification: row.qualification,
+      subjects: row.subjects, qualification: row.qualification, classRange: row.class_range,
       roomRate: row.room_rate, vehicleType: row.vehicle_type, skills: row.skills,
       cvUrl: row.cv_url, cvFileName: row.cv_file_name,
       bloodGroup: row.blood_group, lastDonation: row.last_donation,
-      teachingMode: row.teaching_mode,
+      teachingMode: row.teaching_mode, hidden: !!row.hidden,
       description: row.description, photoUrl: row.photo_url,
       ratingSum: 0, ratingCount: 0,
       createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
@@ -1210,7 +1237,7 @@
       category: data.category, name: data.name, biz_type: data.bizType,
       country: data.country, district: data.district, area: data.area,
       map_query: data.mapQuery, phone: data.phone, whatsapp: data.whatsapp, facebook: data.facebook,
-      subjects: data.subjects, room_rate: data.roomRate, vehicle_type: data.vehicleType, skills: data.skills,
+      subjects: data.subjects, class_range: data.classRange||null, room_rate: data.roomRate, vehicle_type: data.vehicleType, skills: data.skills,
       cv_url: data.cvUrl||null, cv_file_name: data.cvFileName||null,
       blood_group: data.bloodGroup||null, last_donation: data.lastDonation||null,
       teaching_mode: data.teachingMode||null,
@@ -1259,6 +1286,10 @@
     try{ const { data } = await sb.from('donors').select('*'); state.donors = data||[]; }catch(e){ state.donors=[]; }
     try{ const { data } = await sb.from('jobs').select('*').order('created_at', {ascending:false}).limit(5000); state.jobs = (data||[]).map(jobRowToObj); }catch(e){ state.jobs=[]; }
     try{
+      const { data } = await sb.from('chat_profiles').select('id').eq('hidden_from_public', true);
+      state.globallyHiddenOwnerIds = new Set((data||[]).map(r=>r.id));
+    }catch(e){ state.globallyHiddenOwnerIds = new Set(); }
+    try{
       const { data } = await sb.from('blocks').select('*').eq('blocker_id', state.deviceId);
       state.blocks = (data||[]).map(b=>({blocker:b.blocker_id, blocked:b.blocked_id}));
     }catch(e){ state.blocks=[]; }
@@ -1306,8 +1337,13 @@
     await sb.from('chat_profiles').upsert({
       id: state.deviceId, name:state.myProfileName, photo_url:state.myProfilePhoto,
       phone:state.myProfilePhone, whatsapp:state.myProfileWhatsapp, facebook:state.myProfileFacebook,
-      country:state.myProfileCountry, district:state.myProfileDistrict, area:state.myProfileArea
+      country:state.myProfileCountry, district:state.myProfileDistrict, area:state.myProfileArea,
+      hidden_from_public: !!state.myProfileHideAll
     });
+    // keep the local Set in sync immediately so the feed reflects the change
+    // without waiting for the next full reload.
+    if(state.myProfileHideAll) state.globallyHiddenOwnerIds.add(state.deviceId);
+    else state.globallyHiddenOwnerIds.delete(state.deviceId);
   }
 
   // ---------- added: best-effort adult-content check on uploaded image links ----------
@@ -1464,6 +1500,7 @@
         state.myProfilePhone = existing.phone||''; state.myProfileWhatsapp = existing.whatsapp||'';
         state.myProfileFacebook = existing.facebook||'';
         state.myProfileCountry = existing.country||''; state.myProfileDistrict = existing.district||''; state.myProfileArea = existing.area||'';
+        state.myProfileHideAll = !!existing.hidden_from_public;
       } else {
         await sb.from('chat_profiles').insert({ id: state.deviceId, name: session.user.user_metadata?.name || '' });
         state.myProfileName = session.user.user_metadata?.name || '';
@@ -1839,7 +1876,10 @@
   // added: the list of listings/donors/jobs safe to show this device — hides
   // anything owned by someone this device has blocked, or who has blocked this device.
   function visibleListings(){
-    return state.listings.filter(l=> !l.ownerDeviceId || l.ownerDeviceId===state.deviceId || !isBlockedWithMe(l.ownerDeviceId));
+    return state.listings.filter(l=>
+      (!l.ownerDeviceId || l.ownerDeviceId===state.deviceId || !isBlockedWithMe(l.ownerDeviceId))
+      && (l.ownerDeviceId===state.deviceId || (!l.hidden && !state.globallyHiddenOwnerIds.has(l.ownerDeviceId)))
+    );
   }
 
   // added: rank search results so the viewer's own area comes first, then the
@@ -2040,7 +2080,7 @@
     const avg = avgRating(l);
     const hasLoc = l.area && l.district && l.country;
     const locLine = hasLoc ? `${escapeHtml(l.area)}, ${escapeHtml(l.district)}, ${escapeHtml(l.country)}` : '';
-    const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher');
+    const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher' || l.category==='driver');
     const mine = l.ownerDeviceId === state.deviceId;
     return `
     <div class="elk-row" data-open="${l.id}">
@@ -2051,6 +2091,7 @@
         ${!isPersonCat ? (l.bizType==='online' ? `<span class="elk-badge-online">${t('onlineBadge')}</span>` : (hasLoc ? `<span class="elk-badge-physical">${t('physicalBadge')}</span>` : '')) : ''}
         ${isStayCat(l.category) && startingPrice(l)!==null ? `<div class="elk-row-price">${t('startingFromLabel')}: ${escapeHtml(String(startingPrice(l)))}</div>` : ''}
         ${l.category==='worker' && l.skills ? `<div class="elk-row-price">${t('skillsLabel')}: ${escapeHtml(l.skills)}</div>` : ''}
+        ${l.category==='teacher' && (l.subjects||l.classRange) ? `<div class="elk-teacher-badges">${(l.subjects||'').split(',').map(s=>s.trim()).filter(Boolean).map(s=>`<span class="elk-teacher-badge">${escapeHtml(s)}</span>`).join('')}${l.classRange?`<span class="elk-teacher-badge elk-teacher-badge-class">🎓 ${escapeHtml(l.classRange)}</span>`:''}</div>` : ''}
         ${l.category==='donor' && l.bloodGroup ? `<div class="elk-donor-group" style="margin-top:4px;">${escapeHtml(l.bloodGroup)}</div>` : ''}
         <div class="elk-stars">${starString(avg)} <span class="cnt">${avg?avg.toFixed(1):t('ratingNew')} (${l.ratingCount||0})</span></div>
         ${l.createdAt ? `<div class="elk-posted-at">${escapeHtml(formatPostedAt(l.createdAt))}</div>` : ''}
@@ -2058,6 +2099,7 @@
       ${(l.phone || l.whatsapp || !mine) ? `<div class="elk-contact-row" style="margin-top:0;" onclick="event.stopPropagation()">
         ${l.phone ? `<a class="elk-call-btn" href="tel:${escapeHtml(l.phone)}">${t('callBtn')}</a>${copyBtn(l.phone)}` : ''}
         ${l.whatsapp ? `<a class="elk-icon-wa-btn" title="${t('waIconAria')}" aria-label="${t('waIconAria')}" href="${escapeHtml(waLink(l.whatsapp))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🟢</a>` : ''}
+        ${(l.category==='worker'||l.category==='teacher') && l.cvUrl ? `<a class="elk-icon-msg-btn" title="${t('viewCvBtn')}" aria-label="${t('viewCvBtn')}" href="${escapeHtml(l.cvUrl)}" target="_blank" rel="noopener" download="${escapeHtml(l.cvFileName||'CV')}" onclick="event.stopPropagation()">📄</a>` : ''}
         ${!mine ? `<button type="button" class="elk-icon-msg-btn" title="${t('jobMessageBtnAria')}" aria-label="${t('jobMessageBtnAria')}" data-msg-listing-card="${l.id}">${t('messageBtn')}</button>` : ''}
       </div>` : ''}
     </div>`;
@@ -2193,10 +2235,24 @@
         alts = (r.altIds||[]).map(id=>visibleListings().find(l=>l.id===id)).filter(Boolean);
       } else {
         localFallback = true;
-        const subj = state.advSubject.toLowerCase();
+        // Match the same way the main search does (phonetic Bangla<->Banglish),
+        // instead of a raw substring check — a teacher who listed their subject
+        // as "গণিত" should still turn up for someone who types "Math", and vice
+        // versa, not just for an exact-script, exact-substring match.
+        const qWords = state.advSubject.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const qWordsPhon = qWords.map(phoneticOf);
         const teachers = visibleListings().filter(l=>l.category==='teacher');
-        const scored = teachers.map(l=>{ const s=(l.subjects||"").toLowerCase(); let score=0; if(s.includes(subj)) score+=3; return {l,score}; })
-          .filter(x=>x.score>0).sort((a,b)=>b.score-a.score || avgRating(b.l)-avgRating(a.l));
+        const scored = teachers.map(l=>{
+          const hay = ((l.subjects||"")+" "+(l.description||"")).toLowerCase();
+          const hayTokens = hay.split(/[\s,]+/).filter(Boolean);
+          const hayPhon = phoneticOf(hay);
+          const hayTokensPhon = hayTokens.map(phoneticOf);
+          let score = 0;
+          qWords.forEach((w,idx)=>{
+            if(wordMatches(w, qWordsPhon[idx], hay, hayPhon, hayTokens, hayTokensPhon)) score++;
+          });
+          return {l, score};
+        }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score || avgRating(b.l)-avgRating(a.l));
         if(scored.length){ pick=scored[0].l; alts=scored.slice(1,4).map(x=>x.l); }
       }
     }
@@ -2368,6 +2424,7 @@
     if(!areaOpts.includes(state.workAreaFilter)) state.workAreaFilter="সব";
     const list = state.jobs.filter(j=>{
       if(j.ownerDeviceId && isBlockedWithMe(j.ownerDeviceId)) return false;
+      if(j.ownerDeviceId!==state.deviceId && state.globallyHiddenOwnerIds.has(j.ownerDeviceId)) return false;
       if(state.workPostTypeFilter!=="all" && j.postType!==state.workPostTypeFilter) return false;
       if(state.workCountryFilter!=="সব" && j.country!==state.workCountryFilter) return false;
       if(state.workDistrictFilter!=="সব" && j.district!==state.workDistrictFilter) return false;
@@ -2410,7 +2467,7 @@
     const myR = state.myRatings[l.id] || 0;
     const hasLoc = l.area && l.district && l.country;
     const locLine = hasLoc ? `${escapeHtml(l.area)}, ${escapeHtml(l.district)}, ${escapeHtml(l.country)}` : '';
-    const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher');
+    const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher' || l.category==='driver');
     const isOtherOwner = l.ownerDeviceId && l.ownerDeviceId!==state.deviceId;
     const iBlockedThem = isOtherOwner && blockedByMe(l.ownerDeviceId);
     const blockedPair = isOtherOwner && isBlockedWithMe(l.ownerDeviceId);
@@ -2425,7 +2482,7 @@
           <button class="elk-sheet-close" id="elk-sheet-close">✕</button>
         </div>
         ${l.photoUrl ? `<img src="${escapeHtml(l.photoUrl)}" style="width:100%;border-radius:10px;margin-top:12px;max-height:180px;object-fit:cover;" onerror="this.style.display='none'">` : ''}
-        ${l.subjects ? `<div class="desc"><strong>${t('subjectsPrefix')}</strong> ${escapeHtml(l.subjects)}</div>` : ''}
+        ${l.subjects ? `<div class="elk-teacher-badges">${l.subjects.split(',').map(s=>s.trim()).filter(Boolean).map(s=>`<span class="elk-teacher-badge">${escapeHtml(s)}</span>`).join('')}${l.classRange?`<span class="elk-teacher-badge elk-teacher-badge-class">🎓 ${escapeHtml(l.classRange)}</span>`:''}</div>` : ''}
         ${l.category==='teacher' && l.qualification ? `<div class="desc"><strong>${t('qualificationLabel')}:</strong> ${escapeHtml(l.qualification)}</div>` : ''}
         <div class="desc">${l.description ? linkify(l.description) : escapeHtml(t('noDesc'))}</div>
         <div style="font-size:13px;color:var(--muted);">${t('ratingAvgLabel')} ${starString(avgRating(l))} ${avgRating(l)?avgRating(l).toFixed(1):''} (${l.ratingCount||0})</div>
@@ -2434,7 +2491,7 @@
         ${isStayCat(l.category) && startingPrice(l)!==null ? `<div class="elk-room-rate">${t('startingFromLabel')}: ${escapeHtml(String(startingPrice(l)))}</div>` : ''}
         ${l.category==='driver' && l.vehicleType ? `<div class="elk-room-rate">${t('vehicleTypeLabel')}: ${escapeHtml(l.vehicleType)}</div>` : ''}
         ${l.category==='worker' && l.skills ? `<div class="elk-room-rate">${t('skillsLabel')}: ${escapeHtml(l.skills)}</div>` : ''}
-        ${l.category==='worker' && l.cvUrl ? `<a class="elk-ghost-btn" style="margin-top:8px;" href="${escapeHtml(l.cvUrl)}" target="_blank" rel="noopener" download="${escapeHtml(l.cvFileName||'CV')}">${t('viewCvBtn')}</a>` : ''}
+        ${(l.category==='worker'||l.category==='teacher') && l.cvUrl ? `<a class="elk-ghost-btn" style="margin-top:8px;" href="${escapeHtml(l.cvUrl)}" target="_blank" rel="noopener" download="${escapeHtml(l.cvFileName||'CV')}">${t('viewCvBtn')}</a>` : ''}
         ${l.category==='donor' && l.lastDonation ? `<div class="elk-room-rate">${t('lastDonationLabel')}: ${escapeHtml(l.lastDonation)}</div>` : ''}
         ${l.mapQuery ? `<div class="elk-section-sub" style="margin-top:14px;">${t('viewMapBtn')}</div>
           <iframe class="elk-map-embed" src="${escapeHtml(mapEmbedUrl(l.mapQuery))}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -2713,6 +2770,8 @@
           <div class="elk-field"><label>${t('myFacebookLabel')}</label><input name="facebook" value="${escapeHtml(state.myProfileFacebook||'')}" placeholder="${t('facebookPlaceholder')}"></div>
           <div class="elk-location-optional-note">📍 ${t('myLocationRequiredHint')}</div>
           ${locationFieldsHtml('elk-mp', locVals, false)}
+          <label class="elk-checkbox-row" style="margin-top:14px;"><input type="checkbox" name="hideAll" ${state.myProfileHideAll?'checked':''}> ${t('hideAllToggleLabel')}</label>
+          <div class="hint" style="margin-top:2px;">${t('hideAllToggleHint')}</div>
           <button class="elk-submit-btn" type="submit">${t('saveProfileBtn')}</button>
           <button class="elk-ghost-btn" type="button" id="elk-profile-cancel">${t('closeBtn')}</button>
           <button class="elk-ghost-btn" type="button" id="elk-logout-btn2">${t('logoutBtn2')}</button>
@@ -2834,10 +2893,10 @@
       </div>
       ${isNewListing ? `<div class="elk-location-optional-note">🖼️ ${t('addProductsHintOnCreate')}</div>` : ''}
       <div class="elk-field"><label>${t('nameLabel')}</label><input name="name" id="elk-my-name-input" required value="${escapeHtml(l.name)}" placeholder="${namePlaceholderFor(l.category)}"></div>
-      <div class="elk-field" id="elk-my-biztype-field" style="${(l.category==='worker'||l.category==='donor'||l.category==='teacher'||isFixedPlaceCat(l.category))?'display:none;':''}"><label>${t('bizTypeLabel')}</label>
+      <div class="elk-field" id="elk-my-biztype-field" style="${(l.category==='worker'||l.category==='donor'||l.category==='teacher'||l.category==='driver'||isFixedPlaceCat(l.category))?'display:none;':''}"><label>${t('bizTypeLabel')}</label>
         <div class="elk-radio-row">
-          <label><input type="radio" name="bizType" value="physical" ${bizType==='physical'?'checked':''}> ${t('bizTypePhysical')}</label>
-          <label><input type="radio" name="bizType" value="online" ${bizType==='online'?'checked':''}> ${t('bizTypeOnline')}</label>
+          <label><input type="radio" name="bizType" value="physical" ${bizType==='physical'?'checked':''}> ${isServiceCat(l.category) ? t('bizTypePhysicalService') : t('bizTypePhysical')}</label>
+          <label><input type="radio" name="bizType" value="online" ${bizType==='online'?'checked':''}> ${isServiceCat(l.category) ? t('bizTypeOnlineService') : t('bizTypeOnline')}</label>
         </div>
       </div>
       <div class="elk-field" id="elk-my-teachmode-field" style="${l.category==='teacher'?'':'display:none;'}"><label>${t('teachModeLabel')}</label>
@@ -2854,6 +2913,7 @@
       <div class="elk-field" id="elk-my-facebook-field" style="${l.category==='teacher'?'display:none;':''}"><label>${t('facebookLabelAlt')}</label><input name="facebook" value="${escapeHtml(l.facebook||'')}" placeholder="${t('facebookPlaceholder')}"></div>
       <div class="hint" style="margin:-8px 0 12px;">${t('toastNeedContact')}</div>
       <div class="elk-field" id="elk-my-subjects-field" style="${l.category==='teacher'?'':'display:none;'}"><label>${t('subjectsLabel')}</label><input name="subjects" ${l.category==='teacher'?'required':''} value="${escapeHtml(l.subjects||'')}" placeholder="${t('subjectsPlaceholder')}"></div>
+      <div class="elk-field" id="elk-my-classrange-field" style="${l.category==='teacher'?'':'display:none;'}"><label>${t('classRangeLabel')}</label><input name="classRange" ${l.category==='teacher'?'required':''} value="${escapeHtml(l.classRange||'')}" placeholder="${t('classRangePlaceholder')}"></div>
       <div class="elk-field" id="elk-my-rate-field" style="${(l.category==='hotel'||l.category==='resort')?'':'display:none;'}"><label>${t('roomRateLabel')}</label><input name="roomRate" value="${escapeHtml(String(l.roomRate||''))}" placeholder="${t('roomRatePlaceholder')}">
         <div class="hint">${t('roomRateHint')}</div></div>
       <div class="elk-field" id="elk-my-vehicle-field" style="${l.category==='driver'?'':'display:none;'}"><label>${t('vehicleTypeLabel')}</label><input name="vehicleType" ${l.category==='driver'?'required':''} value="${escapeHtml(l.vehicleType||'')}" placeholder="${t('vehicleTypePlaceholder')}"></div>
@@ -3003,12 +3063,14 @@
           const locLine = hasLoc ? `${escapeHtml(l.area)}, ${escapeHtml(l.district)}, ${escapeHtml(l.country)}` : '';
           // donor/worker/teacher are people, not shops — no products to add and no
           // product-demand list to show, so those two buttons are skipped for them.
-          const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher');
+          const isPersonCat = (l.category==='worker' || l.category==='donor' || l.category==='teacher' || l.category==='driver');
           return `<div style="border-bottom:1px solid var(--line); padding:12px 2px;">
-            <div class="elk-row-name">${cat.icon} ${escapeHtml(l.name)}</div>
+            <div class="elk-row-name">${cat.icon} ${escapeHtml(l.name)}${l.hidden?` <span class="elk-teacher-badge elk-teacher-badge-class">${t('hiddenBadge')}</span>`:''}</div>
             <div class="elk-row-area">${escapeHtml(catLabel(l.category))}${locLine? ' · '+locLine : ''}</div>
             ${!isPersonCat ? (l.bizType==='online' ? `<span class="elk-badge-online">${t('onlineBadge')}</span>` : (hasLoc ? `<span class="elk-badge-physical">${t('physicalBadge')}</span>` : '')) : ''}
-            <div class="elk-admin-row-actions">
+            <label class="elk-checkbox-row" style="margin-top:8px;"><input type="checkbox" data-toggle-hide-listing="${l.id}" ${l.hidden?'checked':''}> ${t('hideListingToggleLabel')}</label>
+            <div class="hint" style="margin-top:2px;">${t('hideListingToggleHint')}</div>
+            <div class="elk-admin-row-actions" style="margin-top:8px;">
               <button data-edit-my-listing="${l.id}">${t('editBtn')}</button>
               ${!isPersonCat ? `<button data-products-my-listing="${l.id}">${isStayCat(l.category) ? t('roomsBtnShort') : t('addProductsBtn')}</button>` : ''}
             </div>
@@ -3289,6 +3351,7 @@
         state.myProfileCountry = country;
         state.myProfileDistrict = district;
         state.myProfileArea = area;
+        state.myProfileHideAll = fd.get('hideAll')==='on';
         if(state.myProfileCountry && state.myProfileDistrict && state.myProfileArea) registerLocation(state.myProfileCountry, state.myProfileDistrict, state.myProfileArea);
         state.modal = null;
         render(); await saveMyProfile();
@@ -3493,6 +3556,23 @@
       };
     });
     document.querySelectorAll('[data-open-chat-peer]').forEach(b=>{ b.onclick = ()=>{ openChat(state.myShopChatListingId, b.dataset.openChatPeer); }; });
+    // added: per-profile "hide from everyone else" toggle — owner-only,
+    // guarded server-side by the same owner_id RLS as every other edit.
+    document.querySelectorAll('[data-toggle-hide-listing]').forEach(cb=>{
+      cb.onchange = async ()=>{
+        const id = cb.dataset.toggleHideListing;
+        const l = state.listings.find(x=>x.id===id && x.ownerDeviceId===state.deviceId);
+        if(!l) return;
+        const newVal = cb.checked;
+        try{
+          const { error } = await sb.from('listings').update({hidden: newVal}).eq('id', id).eq('owner_id', state.deviceId);
+          if(error) throw error;
+          l.hidden = newVal;
+          toast(newVal ? t('toastListingHidden') : t('toastListingUnhidden'));
+          render();
+        }catch(e){ cb.checked = !newVal; toast(t('toastRefreshFailed')); }
+      };
+    });
 
     // added: Work / job board bindings
     const addJobBtn = document.getElementById('elk-add-job-btn');
@@ -3598,6 +3678,7 @@
     const myAddCat = document.getElementById('elk-my-add-cat');
     if(myAddCat){
       const subjField = document.getElementById('elk-my-subjects-field');
+      const classRangeField = document.getElementById('elk-my-classrange-field');
       const rateField = document.getElementById('elk-my-rate-field');
       const vehicleField = document.getElementById('elk-my-vehicle-field');
       const skillsField = document.getElementById('elk-my-skills-field');
@@ -3614,6 +3695,7 @@
       const toggle = ()=>{
         const cat = myAddCat.value;
         if(subjField) subjField.style.display = cat==='teacher' ? '' : 'none';
+        if(classRangeField) classRangeField.style.display = cat==='teacher' ? '' : 'none';
         if(rateField) rateField.style.display = (cat==='hotel'||cat==='resort') ? '' : 'none';
         if(vehicleField) vehicleField.style.display = cat==='driver' ? '' : 'none';
         if(skillsField) skillsField.style.display = cat==='worker' ? '' : 'none';
@@ -3624,6 +3706,8 @@
         // (blocking submission) or a shown field not actually required.
         const subjInput = subjField && subjField.querySelector('input[name="subjects"]');
         if(subjInput) subjInput.required = (cat==='teacher');
+        const classRangeInput = classRangeField && classRangeField.querySelector('input[name="classRange"]');
+        if(classRangeInput) classRangeInput.required = (cat==='teacher');
         const vehicleInput = vehicleField && vehicleField.querySelector('input[name="vehicleType"]');
         if(vehicleInput) vehicleInput.required = (cat==='driver');
         const skillsInput = skillsField && skillsField.querySelector('input[name="skills"]');
@@ -3635,7 +3719,7 @@
         // a teacher/worker/donor profile isn't a shop — there's no physical-vs-
         // online-business choice to make, so that field only makes sense for
         // actual shops/services that aren't already a fixed real-world place.
-        const isPersonCat = (cat==='worker' || cat==='donor' || cat==='teacher');
+        const isPersonCat = (cat==='worker' || cat==='donor' || cat==='teacher' || cat==='driver');
         const hideBizType = isPersonCat || isFixedPlaceCat(cat);
         if(bizTypeField) bizTypeField.style.display = hideBizType ? 'none' : '';
         if(hideBizType){
@@ -3711,7 +3795,7 @@
           country:(fd.get('country')||'').trim(), district:(fd.get('district')||'').trim(), area:(fd.get('area')||'').trim(),
           mapQuery:(fd.get('mapQuery')||'').trim(),
           phone:(fd.get('phone')||'').trim(), whatsapp:(fd.get('whatsapp')||'').trim(), facebook:(fd.get('facebook')||'').trim(),
-          subjects:(fd.get('subjects')||'').trim(),
+          subjects:(fd.get('subjects')||'').trim(), classRange:(fd.get('classRange')||'').trim(),
           roomRate:(fd.get('roomRate')||'').trim(),
           vehicleType:(fd.get('vehicleType')||'').trim(),
           skills:(fd.get('skills')||'').trim(),
@@ -3764,7 +3848,7 @@
         // for them. Sending them there anyway is what made creating a donor
         // profile look like it was dumping them into "My Business". Only real
         // shop/service listings get routed into that screen.
-        const isPersonCat = (data.category==='worker' || data.category==='donor' || data.category==='teacher');
+        const isPersonCat = (data.category==='worker' || data.category==='donor' || data.category==='teacher' || data.category==='driver');
         if(newListingId && !isPersonCat){
           // fresh shop/service profile: go straight into "Products & Videos" so
           // the person can immediately post photos/videos buyers will see.
