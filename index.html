@@ -486,6 +486,7 @@
       comboNoMatch:"কিছু পাওয়া যায়নি", copyBtnTitle:"কপি করুন", toastCopied:"✅ কপি হয়েছে",
       emptyNoListings:'এখনো কোনো এন্ট্রি নেই।<br>"আমার ব্যবসা" থেকে নিজের প্রোফাইল যোগ করুন।',
       emptyNoFilterMatch:'এই ফিল্টারে কিছু পাওয়া যায়নি।<br>দেশ/জেলা/এলাকা বা ক্যাটাগরি বদলে দেখুন।',
+      loadMoreBtn:'আরও দেখাও ({n} বাকি)',
       callBtn:"📞 কল", ratingNew:"নতুন",
       searchTitle:"আমার এটা লাগবে", searchTagline:"যা খুঁজছেন লিখুন বা বলুন — বাংলা, বাংলিশ বা ইংরেজি, যেকোনোভাবে",
       searchPlaceholder:"যেমন: ac mairanic, ইংরেজি টিউটর, medicine",
@@ -722,6 +723,7 @@
       allCatsChip:"🗂️ All",
       emptyNoListings:'No entries yet.<br>Add your own profile from "My Business".',
       emptyNoFilterMatch:'Nothing matches this filter.<br>Try a different country/district/area or category.',
+      loadMoreBtn:'Load more ({n} left)',
       callBtn:"📞 Call", ratingNew:"New",
       searchTitle:"I need this", searchTagline:"Type or speak what you're looking for — Bangla, Banglish or English, any way",
       searchPlaceholder:"e.g. ac mechanic, English tutor, medicine",
@@ -1001,6 +1003,7 @@
     listings:[], areas:[], donors:[], dataLoadFailed:false, everLoadedListings:false,
     security:{failedAttempts:0, locked:false},
     countryFilter:"সব", districtFilter:"সব", areaFilter:"সব", catFilter:"all",
+    feedRenderCount:30, jobRenderCount:30, searchRenderCount:30, searchJobRenderCount:30,
     myRatings:{},
     searchQuery:"", searchDone:false, searching:false, aiSearchIds:null, aiSearchJobIds:null,
     advSubject:"", advNote:"", advDone:false, advSearching:false, advResult:null,
@@ -1966,6 +1969,7 @@
   // API directly from the browser with no key, which only worked inside the
   // Claude.ai sandbox and would have cost real money at real-world scale.
   async function runAiSearch(query){
+    state.searchRenderCount = 30; state.searchJobRenderCount = 30;
     if(isAdultQuery(query)){
       state.aiSearchIds = []; state.aiSearchJobIds = []; state.searching = false; state.searchDone = true; render();
       toast(t('adultSearchBlockedToast'));
@@ -2122,7 +2126,8 @@
       </div>
       ${base.length===0 ? `<div class="elk-empty">${t('emptyNoListings')}</div>`
       : list.length===0 ? `<div class="elk-empty">${t('emptyNoFilterMatch')}</div>`
-      : `${fallbackNote? `<div class="elk-location-optional-note">${fallbackNote}</div>` : ''}<div class="elk-list">${list.map(renderRow).join('')}</div>`}
+      : `${fallbackNote? `<div class="elk-location-optional-note">${fallbackNote}</div>` : ''}<div class="elk-list">${list.slice(0, state.feedRenderCount).map(renderRow).join('')}</div>
+      ${list.length > state.feedRenderCount ? `<button type="button" class="elk-ghost-btn" id="elk-feed-load-more">${t('loadMoreBtn', {n: list.length - state.feedRenderCount})}</button>` : ''}`}
     </div>`;
   }
 
@@ -2150,8 +2155,10 @@
       ${state.searching ? `<div class="elk-spin-line">${t('searching')}</div>` :
         !state.searchDone ? `<div class="elk-empty">${t('searchPrompt')}</div>` :
         totalCount===0 ? `<div class="elk-empty">${t('searchNoResult', {q: escapeHtml(state.searchQuery)})}</div>` :
-        `${results.length ? `<div class="elk-list">${results.map(renderRow).join('')}</div>` : ''}
-         ${jobResults.length ? `<div class="elk-section-sub" style="margin-top:${results.length?'14px':'0'};">${t('jobResultsLabel')}</div><div class="elk-list">${jobResults.map(renderJobCard).join('')}</div>` : ''}`}
+        `${results.length ? `<div class="elk-list">${results.slice(0, state.searchRenderCount).map(renderRow).join('')}</div>
+         ${results.length > state.searchRenderCount ? `<button type="button" class="elk-ghost-btn" id="elk-search-load-more">${t('loadMoreBtn', {n: results.length - state.searchRenderCount})}</button>` : ''}` : ''}
+         ${jobResults.length ? `<div class="elk-section-sub" style="margin-top:${results.length?'14px':'0'};">${t('jobResultsLabel')}</div><div class="elk-list">${jobResults.slice(0, state.searchJobRenderCount).map(renderJobCard).join('')}</div>
+         ${jobResults.length > state.searchJobRenderCount ? `<button type="button" class="elk-ghost-btn" id="elk-search-job-load-more">${t('loadMoreBtn', {n: jobResults.length - state.searchJobRenderCount})}</button>` : ''}` : ''}`}
     </div>`;
   }
 
@@ -2368,7 +2375,8 @@
       </div>
       ${state.jobs.length===0 ? `<div class="elk-empty" style="margin-top:16px;">${t('noJobs')}</div>` :
         list.length===0 ? `<div class="elk-empty" style="margin-top:16px;">${t('jobsEmptyFilterMsg')}</div>` :
-        `<div class="elk-list" style="margin-top:12px;">${list.map(renderJobCard).join('')}</div>`}
+        `<div class="elk-list" style="margin-top:12px;">${list.slice(0, state.jobRenderCount).map(renderJobCard).join('')}</div>
+        ${list.length > state.jobRenderCount ? `<button type="button" class="elk-ghost-btn" id="elk-job-load-more">${t('loadMoreBtn', {n: list.length - state.jobRenderCount})}</button>` : ''}`}
     </div>`;
   }
 
@@ -3287,8 +3295,8 @@
       const countries = ["সব", ...distinctCountries()];
       const districts = ["সব", ...distinctDistricts(state.countryFilter)];
       const areaOpts = ["সব", ...distinctAreas(state.countryFilter, state.districtFilter)];
-      initFilterCombo('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.countryFilter=val; state.districtFilter='সব'; state.areaFilter='সব'; render(); });
-      initFilterCombo('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.districtFilter=val; state.areaFilter='সব'; render(); });
+      initFilterCombo('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.countryFilter=val; state.districtFilter='সব'; state.areaFilter='সব'; state.feedRenderCount=30; render(); });
+      initFilterCombo('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.districtFilter=val; state.areaFilter='সব'; state.feedRenderCount=30; render(); });
       initFilterCombo('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.areaFilter=val; render(); });
 
       // manual "search" — applies whatever text is currently typed in the three boxes
@@ -3311,6 +3319,7 @@
         state.countryFilter = (!cVal || cVal===t('allCountriesOpt')) ? 'সব' : pickCase(cVal, distinctCountries());
         state.districtFilter = (!dVal || dVal===t('allDistrictsOpt')) ? 'সব' : pickCase(dVal, distinctDistricts(state.countryFilter));
         state.areaFilter = (!aVal || aVal===t('allAreasOpt')) ? 'সব' : pickCase(aVal, distinctAreas(state.countryFilter, state.districtFilter));
+        state.feedRenderCount = 30;
         render();
       };
       const locSearchBtn = document.getElementById('elk-loc-search-btn');
@@ -3321,7 +3330,15 @@
       });
     }
     const chips = document.getElementById('elk-cat-chips');
-    if(chips) chips.querySelectorAll('.elk-chip').forEach(c=>{ c.onclick=()=>{ state.catFilter=c.dataset.cat; render(); }; });
+    if(chips) chips.querySelectorAll('.elk-chip').forEach(c=>{ c.onclick=()=>{ state.catFilter=c.dataset.cat; state.feedRenderCount=30; render(); }; });
+    const feedLoadMoreBtn = document.getElementById('elk-feed-load-more');
+    if(feedLoadMoreBtn) feedLoadMoreBtn.onclick = ()=>{ state.feedRenderCount += 30; render(); };
+    const searchLoadMoreBtn = document.getElementById('elk-search-load-more');
+    if(searchLoadMoreBtn) searchLoadMoreBtn.onclick = ()=>{ state.searchRenderCount += 30; render(); };
+    const searchJobLoadMoreBtn = document.getElementById('elk-search-job-load-more');
+    if(searchJobLoadMoreBtn) searchJobLoadMoreBtn.onclick = ()=>{ state.searchJobRenderCount += 30; render(); };
+    const jobLoadMoreBtn = document.getElementById('elk-job-load-more');
+    if(jobLoadMoreBtn) jobLoadMoreBtn.onclick = ()=>{ state.jobRenderCount += 30; render(); };
     document.querySelectorAll('.elk-row[data-open]').forEach(r=>{ r.onclick=()=>{ state.openListingId=r.dataset.open; state.productSearchQuery=''; state.productSearchResult=null; render(); }; });
 
     const backdrop = document.getElementById('elk-sheet-backdrop');
@@ -3458,14 +3475,14 @@
     const workBack = document.getElementById('elk-work-back');
     if(workBack) workBack.onclick = ()=>{ state.workView='list'; state.editingJobId=null; render(); };
     const jobTypeChips = document.getElementById('elk-job-type-chips');
-    if(jobTypeChips) jobTypeChips.querySelectorAll('.elk-chip').forEach(c=>{ c.onclick=()=>{ state.workPostTypeFilter=c.dataset.jt; render(); }; });
+    if(jobTypeChips) jobTypeChips.querySelectorAll('.elk-chip').forEach(c=>{ c.onclick=()=>{ state.workPostTypeFilter=c.dataset.jt; state.jobRenderCount=30; render(); }; });
     {
       const countries = ["সব", ...distinctCountries()];
       const districts = ["সব", ...distinctDistricts(state.workCountryFilter)];
       const areaOpts = ["সব", ...distinctAreas(state.workCountryFilter, state.workDistrictFilter)];
-      initFilterCombo('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.workCountryFilter=val; state.workDistrictFilter='সব'; state.workAreaFilter='সব'; render(); });
-      initFilterCombo('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.workDistrictFilter=val; state.workAreaFilter='সব'; render(); });
-      initFilterCombo('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.workAreaFilter=val; render(); });
+      initFilterCombo('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.workCountryFilter=val; state.workDistrictFilter='সব'; state.workAreaFilter='সব'; state.jobRenderCount=30; render(); });
+      initFilterCombo('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.workDistrictFilter=val; state.workAreaFilter='সব'; state.jobRenderCount=30; render(); });
+      initFilterCombo('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.workAreaFilter=val; state.jobRenderCount=30; render(); });
     }
     document.querySelectorAll('[data-edit-job]').forEach(b=>{ b.onclick = ()=>{ state.editingJobId=b.dataset.editJob; state.workView='form'; render(); }; });
     document.querySelectorAll('[data-del-job]').forEach(b=>{
