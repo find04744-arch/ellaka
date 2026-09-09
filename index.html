@@ -148,14 +148,32 @@
   #ellaka-root.dark .elk-chip.active{color:#FBF6E9; box-shadow:0 4px 12px rgba(0,0,0,.5);}
 
   /* ---------- list rows ---------- */
-  .elk-list{display:flex; flex-direction:column; gap:9px; padding-top:2px;}
+  .elk-list{display:flex; flex-direction:column; gap:11px; padding-top:2px;}
+  /* Cards fade/slide in on first render instead of popping in instantly — cheap
+     (opacity+transform only, GPU-composited), so this never causes lag even on
+     older phones. Capped at the first 12 cards so a long list doesn't end up
+     with a huge, silly cascading delay. */
+  .elk-row{animation:elkCardIn .28s var(--ease) backwards;}
+  @keyframes elkCardIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+  .elk-list .elk-row:nth-child(1){animation-delay:.02s;} .elk-list .elk-row:nth-child(2){animation-delay:.05s;}
+  .elk-list .elk-row:nth-child(3){animation-delay:.08s;} .elk-list .elk-row:nth-child(4){animation-delay:.11s;}
+  .elk-list .elk-row:nth-child(5){animation-delay:.14s;} .elk-list .elk-row:nth-child(6){animation-delay:.17s;}
+  .elk-list .elk-row:nth-child(7){animation-delay:.20s;} .elk-list .elk-row:nth-child(8){animation-delay:.23s;}
+  .elk-list .elk-row:nth-child(9){animation-delay:.26s;} .elk-list .elk-row:nth-child(10){animation-delay:.29s;}
+  .elk-list .elk-row:nth-child(n+11){animation-delay:.3s;}
   .elk-row{display:flex; gap:10px; padding:10px 11px; background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius-md); cursor:pointer; box-shadow:var(--shadow-sm); transition:box-shadow .15s var(--ease), transform .1s, border-color .15s;}
   .elk-row:hover{box-shadow:var(--shadow-md); border-color:var(--line);}
   .elk-row:active{transform:scale(.985);}
-  .elk-icon-badge{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;background:linear-gradient(155deg, var(--line-soft), var(--panel));border:1px solid var(--line);}
-  #ellaka-root.dark .elk-icon-badge{background:var(--header-soft); border-color:transparent;}
+  .elk-icon-badge{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;flex:none;background:linear-gradient(155deg, rgba(232,163,61,.22), rgba(232,163,61,.08));border:1px solid rgba(232,163,61,.35); box-shadow:0 2px 6px rgba(232,163,61,.15);}
+  #ellaka-root.dark .elk-icon-badge{background:linear-gradient(155deg, rgba(232,163,61,.28), rgba(232,163,61,.1)); border-color:rgba(232,163,61,.3);}
+  /* Visually breaks the long add/edit form into clear chunks (basic info,
+     location, contact, details) instead of one long unbroken wall of fields —
+     purely a heading style, no layout/behavior change, so it's free performance-wise. */
+  .elk-form-section-label{font-family:'Tiro Bangla', serif; font-size:15px; color:var(--marigold-deep); font-weight:600; margin:22px 0 10px; padding-bottom:6px; border-bottom:1.5px solid var(--line);}
+  #ellaka-root.dark .elk-form-section-label{color:var(--marigold);}
+  .elk-form-section-label:first-child{margin-top:4px;}
   .elk-row-body{flex:1; min-width:0; align-self:center;}
-  .elk-row-name{font-size:13.5px; font-weight:600; letter-spacing:.1px;}
+  .elk-row-name{font-size:15px; font-weight:700; letter-spacing:.1px;}
   .elk-row-area{font-size:11px; color:var(--muted); margin-top:3px;}
   .elk-stars{font-size:12px; color:var(--marigold-deep); margin-top:6px;}
   .elk-stars .cnt{color:var(--muted); margin-left:4px;}
@@ -553,6 +571,7 @@
       teachModeLabel:"পড়ানোর ধরন", teachModeOnline:"💻 অনলাইনে ক্লাস", teachModeOffline:"🏠 বাসায়/সরাসরি পড়ান", teachModeBoth:"✅ দুটোই",
       qualificationLabel:"শিক্ষাগত যোগ্যতা ও অভিজ্ঞতা", qualificationPlaceholder:"যেমন: এমএসসি (গণিত), ঢাকা বিশ্ববিদ্যালয় · ৫ বছরের টিউশন অভিজ্ঞতা",
       classRangeLabel:"কোন ক্লাস থেকে কোন ক্লাস পর্যন্ত পড়ান", classRangePlaceholder:"যেমন: ৩য় শ্রেণি থেকে ১০ম শ্রেণি / SSC",
+      formSectionBasic:"মৌলিক তথ্য", formSectionLocation:"অবস্থান", formSectionContact:"যোগাযোগের তথ্য", formSectionDetails:"বিস্তারিত",
       hideListingToggleLabel:"এই প্রোফাইলটি সবার কাছ থেকে আড়াল করে রাখো",
       hideListingToggleHint:"চালু করলে এই প্রোফাইল/পোস্টটি অন্য কেউ (হোম, সার্চ, কোনোভাবেই) দেখতে পাবে না — শুধু তুমি নিজে এখানে ব্যবস্থাপনার জন্য দেখতে পারবে। বন্ধ করলে আগের মতো সবাই দেখতে পারবে। এটা সম্পূর্ণ ব্যক্তিগত — তুমি শুধু তোমার নিজের প্রোফাইলের এই বাটন চালাতে/দেখতে পারবে, অন্য কারো নয়।",
       hiddenBadge:"🙈 আড়ালে আছে",
@@ -804,6 +823,7 @@
       phoneLabel:"Phone number", subjectsLabel:"Subjects (comma separated)", subjectsPlaceholder:"e.g. Math, Physics",
       qualificationLabel:"Qualifications & experience", qualificationPlaceholder:"e.g. MSc (Math), Dhaka University · 5 years tutoring experience",
       classRangeLabel:"Which classes/grades do you teach", classRangePlaceholder:"e.g. Class 3 to Class 10 / SSC",
+      formSectionBasic:"Basic info", formSectionLocation:"Location", formSectionContact:"Contact details", formSectionDetails:"Details",
       hideListingToggleLabel:"Hide this profile from everyone else",
       hideListingToggleHint:"Turn this on and no one else can see this profile/post anywhere (home, search, nowhere) — only you can still see it here to manage it. Turn it off and everyone can see it again like before. This is fully personal — you can only turn this on/off for your own profile, never anyone else's.",
       hiddenBadge:"🙈 Hidden",
@@ -2877,6 +2897,7 @@
       phone:'', whatsapp:'', facebook:'', subjects:'', description:'', photoUrl:'', roomRate:'', vehicleType:'', skills:'', bloodGroup:'A+', lastDonation:'', mapQuery:'', bizType:'physical', teachingMode:'offline'};
     const bizType = l.bizType || 'physical';
     return `
+      <div class="elk-form-section-label">🧾 ${t('formSectionBasic')}</div>
       <div class="elk-field"><label>${t('catLabel')}</label>
         <select name="category" id="elk-my-add-cat" required>
           ${!l.category ? `<option value="" disabled selected>${t('catChoosePlaceholder')}</option>` : ''}
@@ -2906,8 +2927,10 @@
           <label><input type="radio" name="teachingMode" value="both" ${(l.teachingMode||'')==='both'?'checked':''}> ${t('teachModeBoth')}</label>
         </div>
       </div>
+      <div class="elk-form-section-label">📍 ${t('formSectionLocation')}</div>
       ${locationFieldsHtml('elk-my', l, true)}
       <div class="elk-field" id="elk-my-map-field" style="${(l.category==='worker'||l.category==='donor'||l.category==='teacher')?'display:none;':''}"><label>${t('mapQueryLabel')}</label><input name="mapQuery" value="${escapeHtml(l.mapQuery||'')}" placeholder="${t('mapQueryPlaceholder')}"><div class="hint">${t('mapQueryHint')}</div></div>
+      <div class="elk-form-section-label">📞 ${t('formSectionContact')}</div>
       <div class="elk-field"><label>${t('phoneLabel')}</label><input name="phone" required type="tel" value="${escapeHtml(l.phone)}"></div>
       <div class="elk-field" id="elk-my-whatsapp-field" style="${l.category==='teacher'?'display:none;':''}"><label>${t('whatsappLabel')}</label><input name="whatsapp" type="tel" value="${escapeHtml(l.whatsapp||'')}" placeholder="${t('whatsappPlaceholder')}"></div>
       <div class="elk-field" id="elk-my-facebook-field" style="${l.category==='teacher'?'display:none;':''}"><label>${t('facebookLabelAlt')}</label><input name="facebook" value="${escapeHtml(l.facebook||'')}" placeholder="${t('facebookPlaceholder')}"></div>
@@ -2929,6 +2952,7 @@
       </div>
       <div class="elk-field" id="elk-my-bloodgroup-field" style="${l.category==='donor'?'':'display:none;'}"><label>${t('bloodGroupLabel')}</label><select name="bloodGroup">${BLOOD_GROUPS.map(g=>`<option ${l.bloodGroup===g?'selected':''}>${g}</option>`).join('')}</select></div>
       <div class="elk-field" id="elk-my-lastdonation-field" style="${l.category==='donor'?'':'display:none;'}"><label>${t('lastDonationLabel')}</label><input name="lastDonation" type="date" value="${escapeHtml(l.lastDonation||'')}"></div>
+      <div class="elk-form-section-label">📝 ${t('formSectionDetails')}</div>
       <div class="elk-field" id="elk-my-desc-field"><label>${t('descLabel')}</label><textarea name="description" placeholder="${t('descPlaceholder')}">${escapeHtml(l.description||'')}</textarea></div>
       <div class="elk-lang-hint-sm">${t('anyLanguageHint')}</div>
       <label class="elk-checkbox-row"><input type="checkbox" name="noAdultConfirm" required> ${t('confirmNoAdultLabel')}</label>
