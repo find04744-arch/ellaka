@@ -354,6 +354,24 @@
   .elk-chat-msg.them{align-self:flex-start; background:var(--panel); color:var(--ink); border-color:var(--line); border-bottom-left-radius:5px;}
   #ellaka-root.dark .elk-chat-msg.me{background:var(--marigold); color:#2A1B08;}
   #ellaka-root.dark .elk-chat-msg.them{background:#233731; border-color:#2E4139; color:var(--ink);}
+  /* ---------- chat modal header + input row (Messenger-style) ---------- */
+  .elk-chat-header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--line);}
+  .elk-chat-header-info{display:flex; align-items:center; gap:10px; min-width:0;}
+  .elk-chat-header-info h3{font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;}
+  .elk-chat-header-avatar{width:40px; height:40px; min-width:40px; border-radius:50%; background:linear-gradient(155deg, var(--marigold), var(--marigold-deep)); color:#2B1B04; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex:none;}
+  .elk-chat-header-actions{display:flex; align-items:center; gap:6px; flex:none;}
+  .elk-chat-msg-wrap{display:flex; flex-direction:column; max-width:100%;}
+  .elk-chat-msg-wrap.me{align-items:flex-end;}
+  .elk-chat-msg-wrap.them{align-items:flex-start;}
+  .elk-chat-msg-time{font-size:10.5px; color:var(--muted); margin:3px 4px 0;}
+  .elk-chat-input-row{display:flex; align-items:center; gap:8px; margin-top:12px;}
+  .elk-chat-round-btn{flex:none; width:38px; height:38px; border-radius:50%; border:1.5px solid var(--line); background:var(--panel); color:var(--ink); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; transition:background .12s, transform .1s;}
+  .elk-chat-round-btn:active{transform:scale(.92);}
+  .elk-chat-send-btn{background:var(--marigold); border-color:var(--marigold); color:#2B1B04; font-size:15px;}
+  .elk-chat-text-input{flex:1; min-width:0; padding:10px 16px; border-radius:20px; border:1.5px solid var(--line); background:var(--line-soft); color:var(--ink); font-size:14px;}
+  .elk-chat-text-input:focus{outline:none; border-color:var(--marigold-deep); background:var(--panel);}
+  #ellaka-root.dark .elk-chat-round-btn{background:var(--header-soft); border-color:transparent;}
+  #ellaka-root.dark .elk-chat-text-input{background:var(--header-soft); border-color:transparent;}
   .elk-checkbox-row{display:flex; gap:9px; align-items:flex-start; margin:8px 0 14px; font-size:12.5px; color:var(--ink); line-height:1.55;}
   .elk-checkbox-row input{margin-top:3px; flex:none; accent-color:var(--marigold-deep);}
   .elk-lang-hint-sm{font-size:11px; color:var(--muted); margin:-9px 0 12px;}
@@ -1170,6 +1188,24 @@
     return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
   }
   function avgRating(l){ return l.ratingCount ? l.ratingSum/l.ratingCount : 0; }
+  // added: fair-rotation tiebreaker. Without this, whenever many listings tie
+  // on the real ranking signal (rating, or nothing at all for new/unrated
+  // shops), they'd fall back to plain insertion order — meaning the exact
+  // same shop always lands first for EVERY single viewer searching the same
+  // category+location, forever. This computes a pseudo-random but STABLE
+  // number per (this device, this listing) pair: the same viewer always sees
+  // the same order on reload (no distracting jumping around), but a
+  // different viewer gets a different, still-deterministic order — so
+  // exposure spreads across sellers instead of always favoring whoever
+  // happens to sort first/last by id or date. The actual filtering (which
+  // listings match the chosen country/district/area/category) is completely
+  // untouched — this only reorders an already-correct result set.
+  function fairRank(id){
+    let h = 2166136261 >>> 0;
+    const str = (state.deviceId||'anon') + '|' + id;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h;
+  }
   // Shows "when was this posted" on a card — relative for anything recent
   // (today/yesterday) and a plain date beyond that, in whichever language is
   // active, so people can tell a fresh post from an old one at a glance.
@@ -1185,6 +1221,18 @@
     if(sameDay) return t('postedTodayAt', {time: timeStr});
     if(isYesterday) return t('postedYesterdayAt', {time: timeStr});
     return t('postedOnAt', {date: dateStr, time: timeStr});
+  }
+  // added: short per-bubble timestamp for the chat view (just "10:29 AM", or
+  // "Tue 10:29 AM" once it's not today) — formatPostedAt above is too wordy
+  // to sit under every single message bubble.
+  function chatTimeShort(ts){
+    if(!ts) return '';
+    const d = new Date(ts);
+    const now = new Date();
+    const timeStr = d.toLocaleTimeString(state.lang==='bn'?'bn-BD':'en-US', {hour:'numeric', minute:'2-digit'});
+    if(d.toDateString()===now.toDateString()) return timeStr;
+    const dateStr = d.toLocaleDateString(state.lang==='bn'?'bn-BD':'en-US', {day:'numeric', month:'short'});
+    return dateStr+' '+timeStr;
   }
   // added: for hotel/resort listings, "starting price" is the lowest price among
   // the room photos posted in Products & Videos; falls back to the old single
@@ -1922,7 +1970,10 @@
     return list.slice().sort((a,b)=>{
       const ta = locationTier(a, viewerLoc), tb = locationTier(b, viewerLoc);
       if(ta!==tb) return ta-tb;
-      return listingRecency(b) - listingRecency(a);
+      // fair-rotation tiebreaker (see fairRank) instead of pure recency, so
+      // the same search doesn't always surface the same seller first for
+      // every single person who runs it.
+      return fairRank(a.id)-fairRank(b.id);
     });
   }
 
@@ -2186,7 +2237,9 @@
         if(ra!==null && rb===null) return -1;
         if(ra===null && rb!==null) return 1;
       }
-      return avgRating(b)-avgRating(a);
+      const ratingDiff = avgRating(b)-avgRating(a);
+      if(ratingDiff!==0) return ratingDiff;
+      return fairRank(a.id)-fairRank(b.id);
     });
 
     const locStrip = `
@@ -2450,7 +2503,7 @@
       if(state.workDistrictFilter!=="সব" && j.district!==state.workDistrictFilter) return false;
       if(state.workAreaFilter!=="সব" && !areaMatchesFilter(j.area, state.workAreaFilter)) return false;
       return true;
-    }).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    }).sort((a,b)=> fairRank(a.id)-fairRank(b.id));
     return `
     ${renderHeader(t('workTitle'), t('workTagline'))}
     <div class="elk-content">
@@ -2840,23 +2893,32 @@
     return `
     <div class="elk-modal-backdrop" id="elk-chat-backdrop">
       <div class="elk-modal elk-chat-modal" onclick="event.stopPropagation()">
-        <div class="elk-sheet-head" style="margin-bottom:8px;">
-          <div>
-            <h3 style="margin:0;">${t('chatModalTitle')} — ${escapeHtml(subjectName)}</h3>
-            ${otherPartyId ? `<div class="elk-peer-area" style="margin-top:2px;">${escapeHtml(peerRoleLabel(otherPartyId))}</div>` : ''}
+        <div class="elk-chat-header">
+          <div class="elk-chat-header-info">
+            <div class="elk-chat-header-avatar">${(peerRoleLabel(otherPartyId||'')||'').slice(0,1) || '👤'}</div>
+            <div>
+              <h3>${escapeHtml(subjectName)}</h3>
+              ${otherPartyId ? `<div class="elk-peer-area">${escapeHtml(peerRoleLabel(otherPartyId))}</div>` : ''}
+            </div>
           </div>
-          ${otherPartyId ? (
-            iBlockedThem
-            ? `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px;" data-unblock-user="${escapeHtml(otherPartyId)}">${t('unblockBtn')}</button>`
-            : `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px; color:var(--red); border-color:var(--red);" data-block-user="${escapeHtml(otherPartyId)}">${t('blockBtn')}</button>`
-          ) : ''}
-          ${otherPartyId ? `<button class="elk-ghost-btn" style="margin-top:0; width:auto; padding:8px 12px;" data-report-user="${escapeHtml(otherPartyId)}">${t('reportBtn')}</button>` : ''}
+          <div class="elk-chat-header-actions">
+            ${otherPartyId ? (
+              iBlockedThem
+              ? `<button class="elk-icon-msg-btn" title="${t('unblockBtn')}" data-unblock-user="${escapeHtml(otherPartyId)}">🔓</button>`
+              : `<button class="elk-icon-msg-btn" title="${t('blockBtn')}" style="color:var(--red);" data-block-user="${escapeHtml(otherPartyId)}">🚫</button>`
+            ) : ''}
+            ${otherPartyId ? `<button class="elk-icon-msg-btn" title="${t('reportBtn')}" data-report-user="${escapeHtml(otherPartyId)}">🚩</button>` : ''}
+            <button class="elk-icon-msg-btn" id="elk-chat-close" title="${t('closeBtn')}">✕</button>
+          </div>
         </div>
         <div class="elk-chat-thread" id="elk-chat-thread">
-          ${msgs.length ? msgs.map(m=>`<div class="elk-chat-msg ${m.from===viewerRole?'me':'them'}">
-              ${m.image? `<img src="${escapeHtml(m.image)}" class="elk-chat-msg-img" onerror="this.style.display='none'">` : ''}
-              ${m.video? `<video src="${escapeHtml(m.video)}" class="elk-chat-msg-img" controls></video>` : ''}
-              ${escapeHtml(m.text||'')}
+          ${msgs.length ? msgs.map(m=>`<div class="elk-chat-msg-wrap ${m.from===viewerRole?'me':'them'}">
+              <div class="elk-chat-msg ${m.from===viewerRole?'me':'them'}">
+                ${m.image? `<img src="${escapeHtml(m.image)}" class="elk-chat-msg-img" onerror="this.style.display='none'">` : ''}
+                ${m.video? `<video src="${escapeHtml(m.video)}" class="elk-chat-msg-img" controls></video>` : ''}
+                ${escapeHtml(m.text||'')}
+              </div>
+              <div class="elk-chat-msg-time">${chatTimeShort(m.ts)}</div>
             </div>`).join('')
             : `<div class="elk-empty" style="padding:10px;">${t('noChats')}</div>`}
         </div>
@@ -2866,14 +2928,13 @@
             <button type="button" id="elk-chat-remove-media" style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;border:none;background:var(--red);color:#fff;cursor:pointer;">✕</button>
           </div>` : ''}
         ${state.checkingSafety? `<div class="elk-spin-line">${t('checkingImage')}</div>` : ''}
-        <form id="elk-chat-form" style="display:flex; gap:8px; margin-top:10px;">
+        <form id="elk-chat-form" class="elk-chat-input-row">
           <input type="file" accept="image/*,video/*" id="elk-chat-file" style="display:none;">
-          <button type="button" class="elk-mic-btn" id="elk-chat-attach-btn" title="${t('chatAttachHint')}">${t('chatAttachBtn')}</button>
-          <input name="msg" autocomplete="off" placeholder="${t('chatPlaceholder')}" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--line); font-family:inherit; background:var(--panel); color:var(--ink);">
-          <button type="submit" class="elk-search-go">${t('sendBtn')}</button>
+          <button type="button" class="elk-chat-round-btn" id="elk-chat-attach-btn" title="${t('chatAttachHint')}">${t('chatAttachBtn')}</button>
+          <input name="msg" autocomplete="off" placeholder="${t('chatPlaceholder')}" class="elk-chat-text-input">
+          <button type="submit" class="elk-chat-round-btn elk-chat-send-btn" title="${t('sendBtn')}">➤</button>
         </form>
         `}
-        <button class="elk-ghost-btn" id="elk-chat-close">${t('closeBtn')}</button>
       </div>
     </div>`;
   }
@@ -3321,7 +3382,7 @@
     const profileCloseX = document.getElementById('elk-profile-close-x');
     if(profileCloseX) profileCloseX.onclick = ()=>{ state.modal=null; render(); };
     const logoutBtn2 = document.getElementById('elk-logout-btn2');
-    if(logoutBtn2) logoutBtn2.onclick = ()=>{ state.modal=null; signOut(); };
+    if(logoutBtn2) logoutBtn2.onclick = async ()=>{ if(await reauthenticate()){ state.modal=null; signOut(); } };
     bindCascadingLocation('elk-mp');
     const mpPhotoPickBtn = document.getElementById('elk-mp-photo-pick-btn');
     const mpPhotoFileInput = document.getElementById('elk-mp-photo-file');
