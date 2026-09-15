@@ -145,7 +145,12 @@
   .elk-chip:hover{border-color:var(--marigold-deep); box-shadow:var(--shadow-md);}
   .elk-chip:active{transform:scale(.95);}
   .elk-chip.active{background:var(--header); color:#FBF6E9; border-color:var(--header); box-shadow:0 4px 12px rgba(22,56,50,.32);}
-  #ellaka-root.dark .elk-chip.active{color:#FBF6E9; box-shadow:0 4px 12px rgba(0,0,0,.5);}
+  /* fixed: in dark mode var(--header) is a near-black (#0B1613) that sits almost
+     on top of the dark page background (--paper:#0E1815), so a "selected"
+     category chip used to visually disappear into the page instead of standing
+     out. Dark mode now uses the marigold accent (already the app's CTA color)
+     for the active chip instead, which reads clearly against the dark background. */
+  #ellaka-root.dark .elk-chip.active{background:var(--marigold); color:#2B1B04; border-color:var(--marigold); box-shadow:0 4px 12px rgba(0,0,0,.5);}
 
   /* ---------- list rows ---------- */
   .elk-list{display:flex; flex-direction:column; gap:11px; padding-top:2px;}
@@ -507,6 +512,49 @@
     "শেরপুর","সিরাজগঞ্জ","সুনামগঞ্জ","সিলেট","টাঙ্গাইল","ঠাকুরগাঁও"
   ];
 
+  // ---------- added: fixed district/state/province lists for EVERY country ----------
+  // Originally only বাংলাদেশ had a fixed district list; every other country's
+  // "district" field was free-typed + suggested from whatever had already been
+  // saved to the DB, which is exactly how mismatched spellings/duplicates crept
+  // in in the first place. Now every country in COUNTRY_OPTIONS has its own
+  // fixed pick-only list of states/provinces/governorates (whatever that
+  // country actually calls its top-level division), so nobody can type a new
+  // value for district in ANY country anymore. Keys are normalized (trimmed)
+  // country names exactly as they appear in COUNTRY_OPTIONS.
+  const DISTRICTS_BY_COUNTRY = {
+    "বাংলাদেশ": BD_DISTRICTS,
+    "সৌদি আরব": ["রিয়াদ","মক্কা","মদিনা","পূর্বাঞ্চলীয় প্রদেশ","আসির","তাবুক","হাইল","উত্তর সীমান্ত প্রদেশ","জিজান","নাজরান","আল-বাহা","আল-জাওফ","আল-কাসিম"],
+    "সংযুক্ত আরব আমিরাত": ["আবুধাবি","দুবাই","শারজাহ","আজমান","উম্ম আল-কুওয়াইন","রাস আল খাইমাহ","ফুজাইরাহ"],
+    "কাতার": ["দোহা","আল রাইয়ান","আল ওয়াকরাহ","আল খোর","আল শামাল","আল দাইয়েন","উম্ম সালাল","আল শাহানিয়া"],
+    "ওমান": ["মাস্কাট","দোফার","মুসান্দাম","আল বুরাইমি","আদ দাখিলিয়া","উত্তর আল বাতিনাহ","দক্ষিণ আল বাতিনাহ","উত্তর আশ শারকিয়া","দক্ষিণ আশ শারকিয়া","আদ দাহিরাহ","আল ওয়াস্তা"],
+    "কুয়েত": ["কুয়েত সিটি (আল আসিমাহ)","হাওয়াল্লি","ফারওয়ানিয়া","মুবারক আল-কাবির","আহমাদি","জাহরা"],
+    "বাহরাইন": ["ক্যাপিটাল গভর্নরেট","মুহাররাক গভর্নরেট","উত্তর গভর্নরেট","দক্ষিণ গভর্নরেট"],
+    "মালয়েশিয়া": ["জোহর","কেদাহ","কেলান্তান","মালাক্কা","নেগেরি সেম্বিলান","পাহাং","পেনাং","পেরাক","পার্লিস","সাবাহ","সারাওয়াক","সেলাঙ্গর","তেরেঙ্গানু","কুয়ালালামপুর","লাবুয়ান","পুত্রজায়া"],
+    "সিঙ্গাপুর": ["কেন্দ্রীয় অঞ্চল","পূর্ব অঞ্চল","উত্তর অঞ্চল","উত্তর-পূর্ব অঞ্চল","পশ্চিম অঞ্চল"],
+    "ভারত": ["অন্ধ্রপ্রদেশ","অরুণাচল প্রদেশ","আসাম","বিহার","ছত্তিশগড়","গোয়া","গুজরাট","হরিয়ানা","হিমাচল প্রদেশ","ঝাড়খণ্ড","কর্ণাটক","কেরালা","মধ্যপ্রদেশ","মহারাষ্ট্র","মণিপুর","মেঘালয়","মিজোরাম","নাগাল্যান্ড","ওড়িশা","পাঞ্জাব","রাজস্থান","সিকিম","তামিলনাড়ু","তেলেঙ্গানা","ত্রিপুরা","উত্তরপ্রদেশ","উত্তরাখণ্ড","পশ্চিমবঙ্গ","দিল্লি","জম্মু ও কাশ্মীর","লাদাখ","পুদুচেরি","চণ্ডীগড়","আন্দামান ও নিকোবর দ্বীপপুঞ্জ","দাদরা ও নগর হাভেলি এবং দমন ও দিউ","লাক্ষাদ্বীপ"],
+    "পাকিস্তান": ["পাঞ্জাব","সিন্ধু","খাইবার পাখতুনখোয়া","বেলুচিস্তান","ইসলামাবাদ রাজধানী অঞ্চল","গিলগিত-বালতিস্তান","আজাদ কাশ্মীর"],
+    "শ্রীলঙ্কা": ["পশ্চিম প্রদেশ","মধ্য প্রদেশ","দক্ষিণ প্রদেশ","উত্তর প্রদেশ","পূর্ব প্রদেশ","উত্তর পশ্চিম প্রদেশ","উত্তর মধ্য প্রদেশ","উভা প্রদেশ","সাবারাগামুয়া প্রদেশ"],
+    "নেপাল": ["কোশী","মধেশ","বাগমতী","গন্ডকী","লুম্বিনী","কর্ণালী","সুদূরপশ্চিম"],
+    "মালদ্বীপ": ["হা আলিফ","হা ধাল","শাভিয়ানি","নূনু","রাহ","বারাহ","লাভিয়ানি","কাফু (মালে)","আলিফ আলিফ","আলিফ ধাল","ভাবু","মীমু","ফাফু","ধাল","থা","লামু","গাফু আলিফ","গাফু ধাল","গনাভিয়ানি","সিনু (আড্ডু)"],
+    "যুক্তরাজ্য": ["ইংল্যান্ড - লন্ডন","ইংল্যান্ড - দক্ষিণ পূর্ব","ইংল্যান্ড - দক্ষিণ পশ্চিম","ইংল্যান্ড - পূর্বাঞ্চল","ইংল্যান্ড - ওয়েস্ট মিডল্যান্ডস","ইংল্যান্ড - ইস্ট মিডল্যান্ডস","ইংল্যান্ড - ইয়র্কশায়ার ও হাম্বার","ইংল্যান্ড - উত্তর পূর্ব","ইংল্যান্ড - উত্তর পশ্চিম","স্কটল্যান্ড","ওয়েলস","উত্তর আয়ারল্যান্ড"],
+    "যুক্তরাষ্ট্র": ["আলাবামা","আলাস্কা","অ্যারিজোনা","আরকানসাস","ক্যালিফোর্নিয়া","কলোরাডো","কানেকটিকাট","ডেলাওয়্যার","ফ্লোরিডা","জর্জিয়া","হাওয়াই","আইডাহো","ইলিনয়","ইন্ডিয়ানা","আইওয়া","কানসাস","কেন্টাকি","লুইজিয়ানা","মেইন","মেরিল্যান্ড","ম্যাসাচুসেটস","মিশিগান","মিনেসোটা","মিসিসিপি","মিসৌরি","মন্টানা","নেব্রাস্কা","নেভাদা","নিউ হ্যাম্পশায়ার","নিউ জার্সি","নিউ মেক্সিকো","নিউ ইয়র্ক","নর্থ ক্যারোলিনা","নর্থ ডাকোটা","ওহাইও","ওকলাহোমা","অরেগন","পেনসিলভানিয়া","রোড আইল্যান্ড","সাউথ ক্যারোলিনা","সাউথ ডাকোটা","টেনেসি","টেক্সাস","উটাহ","ভারমন্ট","ভার্জিনিয়া","ওয়াশিংটন","ওয়েস্ট ভার্জিনিয়া","উইসকনসিন","ওয়াইওমিং","ওয়াশিংটন ডিসি"],
+    "কানাডা": ["অন্টারিও","কুইবেক","ব্রিটিশ কলাম্বিয়া","আলবার্টা","ম্যানিটোবা","সাসকাচোয়ান","নোভা স্কশিয়া","নিউ ব্রান্সউইক","নিউফাউন্ডল্যান্ড ও ল্যাব্রাডর","প্রিন্স এডওয়ার্ড আইল্যান্ড","ইউকন","নর্থওয়েস্ট টেরিটরিজ","নুনাভুত"],
+    "অস্ট্রেলিয়া": ["নিউ সাউথ ওয়েলস","ভিক্টোরিয়া","কুইন্সল্যান্ড","ওয়েস্টার্ন অস্ট্রেলিয়া","সাউথ অস্ট্রেলিয়া","তাসমানিয়া","অস্ট্রেলিয়ান ক্যাপিটাল টেরিটরি","নর্দার্ন টেরিটরি"],
+    "ইতালি": ["আব্রুৎসো","বাসিলিকাতা","কালাব্রিয়া","কাম্পানিয়া","এমিলিয়া-রোমাগনা","ফ্রিউলি-ভেনেৎসিয়া জুলিয়া","লাৎসিও","লিগুরিয়া","লোম্বার্দি","মার্কে","মোলিসে","পিয়েমন্তে","পুলিয়া","সার্দিনিয়া","সিসিলি","তোস্কানা","ত্রেন্তিনো-আল্তো আদিজে","উম্ব্রিয়া","ভালে দাওস্তা","ভেনেতো"],
+    "জার্মানি": ["বাডেন-ভুর্টেমবার্গ","বাভারিয়া","বার্লিন","ব্রান্ডেনবুর্গ","ব্রেমেন","হামবুর্গ","হেসে","মেক্লেনবুর্গ-ফোরপোমার্ন","লোয়ার স্যাক্সনি","নর্থ রাইন-ওয়েস্টফালিয়া","রাইনল্যান্ড-প্যালাটিনেট","সারল্যান্ড","স্যাক্সনি","স্যাক্সনি-আনহাল্ট","শ্লেসভিগ-হোলস্টাইন","থুরিঙ্গিয়া"],
+    "ফ্রান্স": ["ইল-দ্য-ফ্রান্স","ওভের্ন-রোন-আল্প","বুর্গান্ডি-ফ্রঁশ-কোঁতে","ব্রিটানি","সঁত্র-ভাল দ্য লোয়ার","করসিকা","গ্রান্দ এস্ত","ও-দ্য-ফ্রান্স","নরম্যান্ডি","নুভেল-অ্যাকিতেন","অক্সিতানি","পে দ্য লা লোয়ার","প্রোভঁস-আল্প-কোত দাজুর","গুয়াদলুপ","মার্তিনিক","ফরাসি গায়ানা","রিউনিয়ন","মায়োত"],
+    "স্পেন": ["আন্দালুসিয়া","আরাগন","আস্তুরিয়াস","বেলেআরিক দ্বীপপুঞ্জ","বাস্ক দেশ","ক্যানারি দ্বীপপুঞ্জ","কান্তাব্রিয়া","কাস্তিয়া-লা মাঞ্চা","কাস্তিয়া ই লেওন","কাতালোনিয়া","এস্ত্রেমাদুরা","গ্যালিসিয়া","লা রিওহা","মাদ্রিদ","মুরসিয়া","নাভারে","ভ্যালেন্সিয়া","সেউতা","মেলিয়া"],
+    "দক্ষিণ কোরিয়া": ["সিউল","বুসান","ইনছন","দায়েগু","দায়েজন","গোয়াংজু","উলসান","সেজং","গিয়ংগি","গাংওন","চুংছেওংবুক","চুংছেওংনাম","জলাব্যুক","জলাব্যাম","গিয়ংসাংবুক","গিয়ংসাংনাম","জেজু"],
+    "জাপান": ["হোক্কাইদো","আওমোরি","ইওয়াতে","মিয়াগি","আকিতা","ইয়ামাগাতা","ফুকুশিমা","ইবারাকি","তোচিগি","গুনমা","সাইতামা","চিবা","টোকিও","কানাগাওয়া","নিগাতা","তোয়ামা","ইশিকাওয়া","ফুকুই","ইয়ামানাশি","নাগানো","গিফু","শিজুওকা","আইচি","মিয়ে","শিগা","কিয়োতো","ওসাকা","হিয়োগো","নারা","ওয়াকায়ামা","তোত্তোরি","শিমানে","ওকায়ামা","হিরোশিমা","ইয়ামাগুচি","তোকুশিমা","কাগাওয়া","এহিমে","কোচি","ফুকুওকা","সাগা","নাগাসাকি","কুমামোতো","ওইতা","মিয়াজাকি","কাগোশিমা","ওকিনাওয়া"],
+    "জর্ডান": ["আম্মান","ইরবিদ","জারকা","বালকা","মাদাবা","কারাক","তাফিলাহ","মা'আন","আকাবা","জারাশ","আজলুন","মাফরাক"],
+    "লেবানন": ["বৈরুত","মাউন্ট লেবানন","উত্তর লেবানন","আক্কার","বেকা","বালবেক-হারমেল","দক্ষিণ লেবানন","নাবাতিয়ে"],
+    "লিবিয়া": ["ত্রিপোলি","বেনগাজি","মিসরাতা","নালুত","জাফারা","জাওইয়া","সিরত","জুফরা","মুরজুক","সাবহা","ওয়াদি আল শাতি","ওয়াদি আল হায়াত","বুতনান","দারনা","আল মারজ","নুকাত আল খামস","ঘাত","আল ওয়াহাত","আজদাবিয়া","আল মুরকুব","আল জাবাল আল আখদার","আল জাবাল আল গারবি","কুফরা"],
+    "ইরাক": ["বাগদাদ","বসরা","নিনেভে","আরবিল","সুলাইমানিয়া","দুহোক","কিরকুক","আনবার","বাবিল","কারবালা","নাজাফ","ওয়াসিত","দিয়ালা","সালাহ আদ-দিন","কাদিসিয়া","মুথান্না","ধি কার","মায়সান"],
+    "ইরান": ["তেহরান","ইস্পাহান","ফার্স","খোরাসান রাজাভি","খুজেস্তান","পূর্ব আজারবাইজান","পশ্চিম আজারবাইজান","গিলান","মাজানদারান","কেরমান","কেরমানশাহ","হরমোজগান","সিস্তান ও বালুচিস্তান","লোরেস্তান","মারকাজি","কোম","কাজভিন","গোলেস্তান","আরদাবিল","হামেদান","ইয়াজদ","বুশেহর","চাহার মহল ও বাখতিয়ারি","কোহগিলুইয়ে ও বোয়ের আহমাদ","ইলাম","উত্তর খোরাসান","দক্ষিণ খোরাসান","সেমনান","আলবোর্জ","জাঞ্জান","কুর্দিস্তান"],
+    "মিশর": ["কায়রো","আলেকজান্দ্রিয়া","গিজা","দাকাহলিয়া","শারকিয়া","কালুবিয়া","কাফর আল-শেখ","গারবিয়া","মেনুফিয়া","বেহেইরা","ইসমাইলিয়া","পোর্ট সাইদ","সুয়েজ","দামিয়েটা","দক্ষিণ সিনাই","উত্তর সিনাই","বেনি সুয়েফ","ফাইয়ুম","মিনিয়া","আসিউত","সোহাগ","কেনা","লুক্সর","আসওয়ান","রেড সি","নিউ ভ্যালি","মাতরুহ"],
+    "দক্ষিণ আফ্রিকা": ["গৌতেং","ক্বাজুলু-নাটাল","ওয়েস্টার্ন কেপ","ইস্টার্ন কেপ","লিম্পোপো","মপুমালাঙ্গা","নর্থ ওয়েস্ট","ফ্রি স্টেট","নর্দার্ন কেপ"]
+  };
+
 
   // ---------- categories (icon + bilingual label) ----------
   const CATS = {
@@ -621,9 +669,9 @@
       bizTypeOnlineService:"🌐 বাড়িতে গিয়ে বা অনলাইনে সেবা দেওয়া হয় (নির্দিষ্ট দোকান নেই)",
       onlineBadge:"🌐 অনলাইন ব্যবসা", physicalBadge:"🏬 সরাসরি দোকান",
       countryLabel:"দেশ", countryPlaceholder:"তালিকা থেকে বেছে নিন",
-      districtLabel:"জেলা", districtPlaceholder:"যেমন: গাজীপুর",
+      districtLabel:"জেলা", districtPlaceholder:"তালিকা থেকে বেছে নিন",
       areaAltLabel:"এলাকা / মহল্লা / গ্রাম", areaAltPlaceholder:"যেমন: দত্তপাড়া (শহরে হলে এলাকার নাম, গ্রামে হলে গ্রামের নাম লিখুন)",
-      newLocHint:"দেশ, আর বাংলাদেশের ক্ষেত্রে জেলাও, শুধু তালিকা থেকেই বেছে নেওয়া যাবে (ভুল বানান ঠেকাতে)। এলাকা/মহল্লা নতুন হলে লিখলেই তা নিজে থেকে তালিকায় যোগ হয়ে যাবে।",
+      newLocHint:"দেশ ও জেলা — সবগুলোই শুধু তালিকা থেকে বেছে নেওয়া যাবে (ভুল বানান ঠেকাতে)। এলাকা/মহল্লা নতুন হলে লিখলেই তা নিজে থেকে তালিকায় যোগ হয়ে যাবে।",
       addNewLocationOpt:"➕ তালিকায় নেই — নিজে লিখুন",
       locationOptionalHint:"এলাকা জানানো ঐচ্ছিক — না দিলেও সমস্যা নেই। তবে দিলে কাছের ক্রেতারা আপনাকে সহজে খুঁজে পাবে।",
       phoneLabel:"ফোন নম্বর", subjectsLabel:"বিষয়সমূহ (কমা দিয়ে)", subjectsPlaceholder:"যেমন: গণিত, পদার্থবিজ্ঞান",
@@ -876,9 +924,9 @@
       bizTypeOnlineService:"🌐 Service given at the customer's home or online (no fixed shop)",
       onlineBadge:"🌐 Online business", physicalBadge:"🏬 Physical shop",
       countryLabel:"Country", countryPlaceholder:"Choose from list",
-      districtLabel:"District", districtPlaceholder:"e.g. Gazipur",
+      districtLabel:"District", districtPlaceholder:"Choose from list",
       areaAltLabel:"Area / neighborhood / village", areaAltPlaceholder:"e.g. Dattapara (use your area name in a city, or your village name in a village)",
-      newLocHint:"Country — and for Bangladesh, district too — can only be chosen from the list (to prevent typos). Typing a new area/neighborhood will add it to the list automatically.",
+      newLocHint:"Country and district can only be chosen from the list (to prevent typos). Typing a new area/neighborhood will add it to the list automatically.",
       addNewLocationOpt:"➕ Not listed — type your own",
       locationOptionalHint:"Sharing your area is optional — it's fine to skip it. Adding it helps nearby buyers find you.",
       phoneLabel:"Phone number", subjectsLabel:"Subjects (comma separated)", subjectsPlaceholder:"e.g. Math, Physics",
@@ -1850,19 +1898,46 @@
   }
 
   // ---------- location hierarchy: country -> district -> area ----------
-  // added: values are trimmed/whitespace-collapsed before comparing, so old
-  // entries that only differ by stray spaces don't show up as separate
-  // "duplicate" options in the suggestion lists below.
-  function distinctCountries(){ return Array.from(new Set(state.areas.map(a=>normLoc(a.country)))).sort(); }
+  // added: country and district now always come from the fixed lists above
+  // (COUNTRY_OPTIONS / DISTRICTS_BY_COUNTRY) instead of from whatever happens
+  // to be saved in the DB's `areas` table. This does two things at once:
+  //   1) every country's district dropdown is now a real, correct list of
+  //      that country's own states/provinces — not Bangladeshi districts, or
+  //      a mix of whatever people typed before.
+  //   2) any old mistyped/duplicate country or district that was saved to the
+  //      DB before this fix (e.g. "Bangladesh" in English, or a misspelled
+  //      district) silently stops showing up in these lists, without us
+  //      having to touch/delete anything in Supabase.
+  // Area/মহল্লা is still too granular to enumerate, so it still comes from
+  // the DB — but only entries under a recognized (fixed-list) country are
+  // considered, for the same "hide old junk" reason.
+  function distinctCountries(){ return COUNTRY_OPTIONS.slice(); }
   function distinctDistricts(country){
     const nc = normLoc(country);
-    return Array.from(new Set(state.areas.filter(a=> nc==="সব"||normLoc(a.country)===nc).map(a=>normLoc(a.district)))).sort();
+    if(nc === "সব"){
+      const fixedAll = Object.values(DISTRICTS_BY_COUNTRY).reduce((acc,list)=>acc.concat(list), []);
+      const extra = state.areas
+        .filter(a=> !DISTRICTS_BY_COUNTRY[normLoc(a.country)])
+        .map(a=>normLoc(a.district));
+      return Array.from(new Set([...fixedAll, ...extra])).sort();
+    }
+    const fixed = DISTRICTS_BY_COUNTRY[nc];
+    if(fixed) return fixed.slice();
+    // fallback for a country we don't (yet) have a fixed list for
+    return Array.from(new Set(state.areas.filter(a=> normLoc(a.country)===nc).map(a=>normLoc(a.district)))).sort();
   }
   function distinctAreas(country, district){
     const nc = normLoc(country), nd = normLoc(district);
-    return Array.from(new Set(state.areas.filter(a=>
-      (nc==="সব"||normLoc(a.country)===nc) && (nd==="সব"||normLoc(a.district)===nd)
-    ).map(a=>normLoc(a.area)))).sort();
+    return Array.from(new Set(state.areas.filter(a=>{
+      const ac = normLoc(a.country);
+      // hide legacy rows saved under a country name that isn't one of our
+      // fixed options (old typos/duplicates) — nothing new can be saved
+      // under those anymore, so this only ever hides pre-existing junk.
+      if(!COUNTRY_OPTIONS.includes(ac)) return false;
+      if(nc!=="সব" && ac!==nc) return false;
+      if(nd!=="সব" && normLoc(a.district)!==nd) return false;
+      return true;
+    }).map(a=>normLoc(a.area)))).sort();
   }
 
   // ---------- searchable type-to-find combo box (used for country/district/area filters) ----------
@@ -2019,16 +2094,18 @@
       };
     }
 
-    // District free-typing is only allowed for countries other than বাংলাদেশ
-    // (we don't have an official district list for every country). Whenever
-    // the country changes, the district field's behaviour is re-bound to
-    // match: a fixed 64-district picker for বাংলাদেশ, or the normal
-    // free-type-with-suggestions combo for anywhere else.
+    // Every country in COUNTRY_OPTIONS now has its own fixed district list
+    // (DISTRICTS_BY_COUNTRY), so district is a pick-only field everywhere,
+    // not just for বাংলাদেশ. Whenever the country changes, the district
+    // field's behaviour is re-bound to that country's own list. (The
+    // free-type fallback below only kicks in for a country we somehow don't
+    // have a fixed list for — a safety net, not the normal path.)
     function rebindDistrict(){
       districtInput.setAttribute('readonly','readonly');
       const country = countryInput.value.trim();
-      if(country === 'বাংলাদেশ'){
-        attachFixedPicker(districtInput, `${prefix}-district-list`, BD_DISTRICTS, ()=>{ areaInput.value=''; });
+      const fixedList = DISTRICTS_BY_COUNTRY[normLoc(country)];
+      if(fixedList){
+        attachFixedPicker(districtInput, `${prefix}-district-list`, fixedList, ()=>{ areaInput.value=''; });
       } else {
         attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(country||'সব'), ()=>{ areaInput.value=''; });
       }
