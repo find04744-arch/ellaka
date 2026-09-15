@@ -571,6 +571,8 @@
       authResetTitle:"নতুন পাসওয়ার্ড দিন", authResetSub:"আপনার একাউন্টের জন্য একটা নতুন পাসওয়ার্ড লিখুন।", authResetBtn:"পাসওয়ার্ড সেভ করুন",
       authCheckEmailToConfirm:"ইমেইল চেক করুন — একটা কনফার্মেশন লিংক পাঠানো হয়েছে, সেটাতে ক্লিক করে তারপর লগইন করুন।",
       authWrongCreds:"ইমেইল বা পাসওয়ার্ড ভুল হয়েছে, আবার চেষ্টা করুন।",
+      authDisposableEmailError:"এই ধরনের সাময়িক/ভুয়া ইমেইল (temporary email) দিয়ে একাউন্ট খোলা যাবে না। দয়া করে আপনার real/personal ইমেইল ব্যবহার করুন।",
+      authEmailNotConfirmed:"এই ইমেইলটি এখনো কনফার্ম করা হয়নি। ইমেইলে পাঠানো কনফার্মেশন লিংকে ক্লিক করে তারপর আবার লগইন করুন।",
       authResetEmailSent:"ইমেইল পাঠানো হয়েছে — ইনবক্স (স্প্যাম ফোল্ডারও) চেক করুন।",
       authPasswordUpdated:"পাসওয়ার্ড আপডেট হয়ে গেছে!", authReauthPrompt:"নিশ্চিত করতে আপনার পাসওয়ার্ড লিখুন:",
       logoutBtn2:"লগআউট করুন",
@@ -824,6 +826,8 @@
       authResetTitle:"Set a new password", authResetSub:"Choose a new password for your account.", authResetBtn:"Save password",
       authCheckEmailToConfirm:"Check your email — we sent a confirmation link. Click it, then log in.",
       authWrongCreds:"Wrong email or password, please try again.",
+      authDisposableEmailError:"Temporary/disposable email addresses can't be used to sign up. Please use a real, personal email.",
+      authEmailNotConfirmed:"This email hasn't been confirmed yet. Please click the confirmation link we emailed you, then log in again.",
       authResetEmailSent:"Email sent — check your inbox (and spam folder).",
       authPasswordUpdated:"Password updated!", authReauthPrompt:"Enter your password to confirm:",
       logoutBtn2:"Log out",
@@ -1188,6 +1192,24 @@
     return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
   }
   function avgRating(l){ return l.ratingCount ? l.ratingSum/l.ratingCount : 0; }
+  // added: fair-rotation tiebreaker. Without this, whenever many listings tie
+  // on the real ranking signal (rating, or nothing at all for new/unrated
+  // shops), they'd fall back to plain insertion order — meaning the exact
+  // same shop always lands first for EVERY single viewer searching the same
+  // category+location, forever. This computes a pseudo-random but STABLE
+  // number per (this device, this listing) pair: the same viewer always sees
+  // the same order on reload (no distracting jumping around), but a
+  // different viewer gets a different, still-deterministic order — so
+  // exposure spreads across sellers instead of always favoring whoever
+  // happens to sort first/last by id or date. The actual filtering (which
+  // listings match the chosen country/district/area/category) is completely
+  // untouched — this only reorders an already-correct result set.
+  function fairRank(id){
+    let h = 2166136261 >>> 0;
+    const str = (state.deviceId||'anon') + '|' + id;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h;
+  }
   // Shows "when was this posted" on a card — relative for anything recent
   // (today/yesterday) and a plain date beyond that, in whichever language is
   // active, so people can tell a fresh post from an old one at a glance.
@@ -1537,7 +1559,40 @@
   // not a spoofable local random value — every place that already compares
   // l.ownerDeviceId === state.deviceId keeps working, but now it's backed by
   // a real login, so nobody can fake owning someone else's listing.
+  // added: quick client-side check for common throwaway/temp-mail domains,
+  // so obviously fake addresses are rejected before we even try to send a
+  // confirmation email. This is a secondary layer — the real gate against
+  // fake emails is the "Confirm email" setting in the Supabase dashboard
+  // (Authentication → Sign In / Providers → Email), which must be turned ON
+  // for this to matter at all.
+  function isDisposableEmailDomain(email){
+    const domain = (String(email||'').split('@')[1]||'').toLowerCase().trim();
+    if(!domain) return true;
+    const blocked = new Set([
+      'mailinator.com','mailinator.net','mailinator.org','yopmail.com','yopmail.fr','yopmail.net',
+      'guerrillamail.com','guerrillamail.biz','guerrillamail.de','guerrillamail.info','guerrillamail.net','guerrillamail.org',
+      '10minutemail.com','10minutemail.net','20minutemail.com','temp-mail.org','tempmail.com','tempmail.net','tempmail.dev',
+      'throwawaymail.com','trashmail.com','trashmail.net','trashmail.me','sharklasers.com','getnada.com','nada.email',
+      'dispostable.com','fakeinbox.com','fakemailgenerator.com','maildrop.cc','mintemail.com','mohmal.com',
+      'emailondeck.com','moakt.com','mytemp.email','tempinbox.com','tempr.email','discard.email','discardmail.com',
+      'spamgourmet.com','spam4.me','byom.de','einrot.com','inboxbear.com','luxusmail.org','mail-temp.com',
+      'tempail.com','tempmailo.com','tempmailaddress.com','emailfake.com','crazymailing.com','burnermail.io',
+      'mailnesia.com','anonbox.net','deadaddress.com','jetable.org','no-spam.ws','spambog.com','trbvm.com',
+      'wegwerfmail.de','wegwerfmail.net','wegwerfmail.org'
+    ]);
+    return blocked.has(domain);
+  }
   async function onAuthReady(session){
+    // added: even if some session slips through (project misconfiguration,
+    // etc.), never treat an unverified email as "logged in". Real accounts
+    // always end up with email_confirmed_at set once they click the
+    // confirmation link.
+    if(session && session.user && !session.user.email_confirmed_at){
+      try{ await sb.auth.signOut(); }catch(e){}
+      state.session = null; state.authMode='login'; state.authError = t('authEmailNotConfirmed');
+      state.loaded = true; render();
+      return;
+    }
     state.session = session;
     state.deviceId = session.user.id;
     state.currentUserEmail = session.user.email;
@@ -1952,7 +2007,10 @@
     return list.slice().sort((a,b)=>{
       const ta = locationTier(a, viewerLoc), tb = locationTier(b, viewerLoc);
       if(ta!==tb) return ta-tb;
-      return listingRecency(b) - listingRecency(a);
+      // fair-rotation tiebreaker (see fairRank) instead of pure recency, so
+      // the same search doesn't always surface the same seller first for
+      // every single person who runs it.
+      return fairRank(a.id)-fairRank(b.id);
     });
   }
 
@@ -2216,7 +2274,9 @@
         if(ra!==null && rb===null) return -1;
         if(ra===null && rb!==null) return 1;
       }
-      return avgRating(b)-avgRating(a);
+      const ratingDiff = avgRating(b)-avgRating(a);
+      if(ratingDiff!==0) return ratingDiff;
+      return fairRank(a.id)-fairRank(b.id);
     });
 
     const locStrip = `
@@ -2480,7 +2540,7 @@
       if(state.workDistrictFilter!=="সব" && j.district!==state.workDistrictFilter) return false;
       if(state.workAreaFilter!=="সব" && !areaMatchesFilter(j.area, state.workAreaFilter)) return false;
       return true;
-    }).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    }).sort((a,b)=> fairRank(a.id)-fairRank(b.id));
     return `
     ${renderHeader(t('workTitle'), t('workTagline'))}
     <div class="elk-content">
@@ -2732,6 +2792,9 @@
         state.authError=''; state.authInfo=''; state.authBusy=true; render();
         if(state.authMode==='signup'){
           const name = (fd.get('name')||'').trim();
+          if(isDisposableEmailDomain(email)){
+            state.authBusy=false; state.authError = t('authDisposableEmailError'); render(); return;
+          }
           const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ name } } });
           state.authBusy=false;
           if(error){
@@ -3430,10 +3493,46 @@
         state.myProfileCountry=''; state.myProfileDistrict=''; state.myProfileArea='';
         state.modal = null;
         render();
+        // added: profile deletion must also wipe every post this account
+        // ever made — otherwise a "deleted" shop/job/product would keep
+        // showing up publicly with no owner attached. Children are deleted
+        // before their parent listing/job so no foreign-key reference is
+        // left dangling.
+        try{
+          const [{ data: myListings }, { data: myJobs }] = await Promise.all([
+            sb.from('listings').select('id').eq('owner_id', state.deviceId),
+            sb.from('jobs').select('id').eq('owner_id', state.deviceId)
+          ]);
+          const myListingIds = (myListings||[]).map(l=>l.id);
+          const myJobIds = (myJobs||[]).map(j=>j.id);
+          if(myListingIds.length){
+            await sb.from('products').delete().in('listing_id', myListingIds);
+            await sb.from('product_demand').delete().in('listing_id', myListingIds);
+            await sb.from('ratings').delete().in('listing_id', myListingIds);
+            await sb.from('messages').delete().in('listing_id', myListingIds);
+          }
+          if(myJobIds.length){
+            await sb.from('messages').delete().in('job_id', myJobIds);
+          }
+          await sb.from('ratings').delete().eq('rater_id', state.deviceId);
+          await sb.from('messages').delete().eq('buyer_id', state.deviceId);
+          await sb.from('messages').delete().eq('sender_id', state.deviceId);
+          await sb.from('blocks').delete().eq('blocker_id', state.deviceId);
+          await sb.from('blocks').delete().eq('blocked_id', state.deviceId);
+          await sb.from('listings').delete().eq('owner_id', state.deviceId);
+          await sb.from('jobs').delete().eq('owner_id', state.deviceId);
+        }catch(e){ /* best-effort: still remove the profile card + account below either way */ }
         // removes this device's public contact card so it stops showing up in
         // shop owners' chat/inbox lists once it's deleted.
         try{ await sb.from('chat_profiles').delete().eq('id', state.deviceId); }catch(e){ /* best-effort */ }
+        // added: fully removes the login account itself via a Postgres
+        // function (see the SQL setup) so the email is completely freed up
+        // and this account can never be signed back into. Safe to call even
+        // before that SQL function is added — it just fails silently and
+        // everything deleted above still stays deleted.
+        try{ await sb.rpc('delete_own_account'); }catch(e){ /* best-effort */ }
         toast(t('toastProfileDeleted'));
+        await signOut();
       };
     }
 
