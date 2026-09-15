@@ -481,6 +481,33 @@
 
   const BLOOD_GROUPS = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
 
+  // ---------- added: fixed country + Bangladesh-district lists ----------
+  // These used to be 100% free-typed, which meant the same place ended up
+  // stored under several different spellings/scripts (e.g. "Bangladesh" vs
+  // "বাংলাদেশ") — each spelling became its own separate, near-empty list
+  // instead of everyone sharing one. Country (a short, known set) and,
+  // for Bangladesh specifically, district (a fixed official 64) are now
+  // pick-only lists — nobody can type a new value for these two, so no new
+  // typo/duplicate can ever be created for them going forward. Area/মহল্লা
+  // stays free-typed below since it's too granular to enumerate.
+  const COUNTRY_OPTIONS = [
+    "বাংলাদেশ","সৌদি আরব","সংযুক্ত আরব আমিরাত","কাতার","ওমান","কুয়েত","বাহরাইন",
+    "মালয়েশিয়া","সিঙ্গাপুর","ভারত","পাকিস্তান","শ্রীলঙ্কা","নেপাল","মালদ্বীপ",
+    "যুক্তরাজ্য","যুক্তরাষ্ট্র","কানাডা","অস্ট্রেলিয়া","ইতালি","জার্মানি","ফ্রান্স","স্পেন",
+    "দক্ষিণ কোরিয়া","জাপান","জর্ডান","লেবানন","লিবিয়া","ইরাক","ইরান","মিশর","দক্ষিণ আফ্রিকা"
+  ];
+  const BD_DISTRICTS = [
+    "বাগেরহাট","বান্দরবান","বরগুনা","বরিশাল","ভোলা","বগুড়া","ব্রাহ্মণবাড়িয়া","চাঁদপুর",
+    "চাঁপাইনবাবগঞ্জ","চট্টগ্রাম","চুয়াডাঙ্গা","কুমিল্লা","কক্সবাজার","ঢাকা","দিনাজপুর","ফরিদপুর",
+    "ফেনী","গাইবান্ধা","গাজীপুর","গোপালগঞ্জ","হবিগঞ্জ","জামালপুর","যশোর","ঝালকাঠি","ঝিনাইদহ",
+    "জয়পুরহাট","খাগড়াছড়ি","খুলনা","কিশোরগঞ্জ","কুড়িগ্রাম","কুষ্টিয়া","লক্ষ্মীপুর","লালমনিরহাট",
+    "মাদারীপুর","মাগুরা","মানিকগঞ্জ","মেহেরপুর","মৌলভীবাজার","মুন্সিগঞ্জ","ময়মনসিংহ","নওগাঁ",
+    "নড়াইল","নারায়ণগঞ্জ","নরসিংদী","নাটোর","নেত্রকোনা","নীলফামারী","নোয়াখালী","পাবনা","পঞ্চগড়",
+    "পটুয়াখালী","পিরোজপুর","রাজবাড়ী","রাজশাহী","রাঙ্গামাটি","রংপুর","সাতক্ষীরা","শরীয়তপুর",
+    "শেরপুর","সিরাজগঞ্জ","সুনামগঞ্জ","সিলেট","টাঙ্গাইল","ঠাকুরগাঁও"
+  ];
+
+
   // ---------- categories (icon + bilingual label) ----------
   const CATS = {
     hospital:{icon:"🏥", label:{bn:"হাসপাতাল/ক্লিনিক", en:"Hospital/Clinic"}, namePh:{bn:"যেমন: রহিম জেনারেল হাসপাতাল", en:"e.g. Rahim General Hospital"}},
@@ -593,10 +620,10 @@
       bizTypePhysicalService:"🏬 দোকানে/স্পটে গিয়ে সরাসরি সেবা নেওয়া যায়",
       bizTypeOnlineService:"🌐 বাড়িতে গিয়ে বা অনলাইনে সেবা দেওয়া হয় (নির্দিষ্ট দোকান নেই)",
       onlineBadge:"🌐 অনলাইন ব্যবসা", physicalBadge:"🏬 সরাসরি দোকান",
-      countryLabel:"দেশ", countryPlaceholder:"যেমন: Bangladesh",
+      countryLabel:"দেশ", countryPlaceholder:"তালিকা থেকে বেছে নিন",
       districtLabel:"জেলা", districtPlaceholder:"যেমন: গাজীপুর",
       areaAltLabel:"এলাকা / মহল্লা / গ্রাম", areaAltPlaceholder:"যেমন: দত্তপাড়া (শহরে হলে এলাকার নাম, গ্রামে হলে গ্রামের নাম লিখুন)",
-      newLocHint:"নতুন দেশ/জেলা/এলাকা লিখলে এটি নিজে থেকেই তালিকায় যোগ হবে।",
+      newLocHint:"দেশ, আর বাংলাদেশের ক্ষেত্রে জেলাও, শুধু তালিকা থেকেই বেছে নেওয়া যাবে (ভুল বানান ঠেকাতে)। এলাকা/মহল্লা নতুন হলে লিখলেই তা নিজে থেকে তালিকায় যোগ হয়ে যাবে।",
       addNewLocationOpt:"➕ তালিকায় নেই — নিজে লিখুন",
       locationOptionalHint:"এলাকা জানানো ঐচ্ছিক — না দিলেও সমস্যা নেই। তবে দিলে কাছের ক্রেতারা আপনাকে সহজে খুঁজে পাবে।",
       phoneLabel:"ফোন নম্বর", subjectsLabel:"বিষয়সমূহ (কমা দিয়ে)", subjectsPlaceholder:"যেমন: গণিত, পদার্থবিজ্ঞান",
@@ -848,10 +875,10 @@
       bizTypePhysicalService:"🏬 Service given in-person at a shop/spot",
       bizTypeOnlineService:"🌐 Service given at the customer's home or online (no fixed shop)",
       onlineBadge:"🌐 Online business", physicalBadge:"🏬 Physical shop",
-      countryLabel:"Country", countryPlaceholder:"e.g. Bangladesh",
+      countryLabel:"Country", countryPlaceholder:"Choose from list",
       districtLabel:"District", districtPlaceholder:"e.g. Gazipur",
       areaAltLabel:"Area / neighborhood / village", areaAltPlaceholder:"e.g. Dattapara (use your area name in a city, or your village name in a village)",
-      newLocHint:"Typing a new country/district/area will add it to the list automatically.",
+      newLocHint:"Country — and for Bangladesh, district too — can only be chosen from the list (to prevent typos). Typing a new area/neighborhood will add it to the list automatically.",
       addNewLocationOpt:"➕ Not listed — type your own",
       locationOptionalHint:"Sharing your area is optional — it's fine to skip it. Adding it helps nearby buyers find you.",
       phoneLabel:"Phone number", subjectsLabel:"Subjects (comma separated)", subjectsPlaceholder:"e.g. Math, Physics",
@@ -1823,14 +1850,19 @@
   }
 
   // ---------- location hierarchy: country -> district -> area ----------
-  function distinctCountries(){ return Array.from(new Set(state.areas.map(a=>a.country))).sort(); }
+  // added: values are trimmed/whitespace-collapsed before comparing, so old
+  // entries that only differ by stray spaces don't show up as separate
+  // "duplicate" options in the suggestion lists below.
+  function distinctCountries(){ return Array.from(new Set(state.areas.map(a=>normLoc(a.country)))).sort(); }
   function distinctDistricts(country){
-    return Array.from(new Set(state.areas.filter(a=> country==="সব"||a.country===country).map(a=>a.district))).sort();
+    const nc = normLoc(country);
+    return Array.from(new Set(state.areas.filter(a=> nc==="সব"||normLoc(a.country)===nc).map(a=>normLoc(a.district)))).sort();
   }
   function distinctAreas(country, district){
+    const nc = normLoc(country), nd = normLoc(district);
     return Array.from(new Set(state.areas.filter(a=>
-      (country==="সব"||a.country===country) && (district==="সব"||a.district===district)
-    ).map(a=>a.area))).sort();
+      (nc==="সব"||normLoc(a.country)===nc) && (nd==="সব"||normLoc(a.district)===nd)
+    ).map(a=>normLoc(a.area)))).sort();
   }
 
   // ---------- searchable type-to-find combo box (used for country/district/area filters) ----------
@@ -1959,15 +1991,64 @@
       input.onfocus = ()=>{ if(!input.hasAttribute('readonly')) show(input.value); };
     }
 
-    attachSuggest(countryInput, `${prefix}-country-list`, ()=>distinctCountries(), ()=>{ districtInput.value=''; areaInput.value=''; });
-    attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(countryInput.value.trim()||'সব'), ()=>{ areaInput.value=''; });
+    // added: pick-only combo for fields where free typing is no longer allowed
+    // (country, and district when the country is বাংলাদেশ) — same look/feel as
+    // the free-type combo above, but there is no "+ type your own" option and
+    // the field always stays readonly, so nobody can type a typo/garbage value
+    // in here at all. Options always come from a fixed list, not from the DB.
+    function attachFixedPicker(input, listId, options, onPick){
+      const list = document.getElementById(listId);
+      if(!list) return;
+      input.setAttribute('readonly','readonly');
+      function show(filterText){
+        const q = (filterText||'').trim().toLowerCase();
+        const filtered = q ? options.filter(o=>o.toLowerCase().includes(q)) : options;
+        list.innerHTML = filtered.length
+          ? filtered.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('')
+          : `<div class="elk-combo-empty">${t('comboNoMatch')}</div>`;
+        list.style.display = 'block';
+        list.querySelectorAll('.elk-combo-opt[data-value]').forEach(opt=>{
+          opt.onclick = (e)=>{ e.stopPropagation(); input.value = opt.dataset.value; list.style.display='none'; if(onPick) onPick(opt.dataset.value); };
+        });
+      }
+      input.onclick = (e)=>{
+        e.stopPropagation();
+        const isOpen = list.style.display === 'block';
+        closeAllCombos();
+        if(!isOpen) show('');
+      };
+    }
+
+    // District free-typing is only allowed for countries other than বাংলাদেশ
+    // (we don't have an official district list for every country). Whenever
+    // the country changes, the district field's behaviour is re-bound to
+    // match: a fixed 64-district picker for বাংলাদেশ, or the normal
+    // free-type-with-suggestions combo for anywhere else.
+    function rebindDistrict(){
+      districtInput.setAttribute('readonly','readonly');
+      const country = countryInput.value.trim();
+      if(country === 'বাংলাদেশ'){
+        attachFixedPicker(districtInput, `${prefix}-district-list`, BD_DISTRICTS, ()=>{ areaInput.value=''; });
+      } else {
+        attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(country||'সব'), ()=>{ areaInput.value=''; });
+      }
+    }
+
+    attachFixedPicker(countryInput, `${prefix}-country-list`, COUNTRY_OPTIONS, ()=>{
+      districtInput.value=''; areaInput.value='';
+      rebindDistrict();
+    });
+    rebindDistrict(); // initial bind for whatever country came pre-filled — never clears the pre-filled district
     attachSuggest(areaInput, `${prefix}-area-list`, ()=>distinctAreas(countryInput.value.trim()||'সব', districtInput.value.trim()||'সব'));
   }
+  function normLoc(s){ return String(s||'').trim().replace(/\s+/g,' '); }
   async function registerLocation(country, district, area){
-    const exists = state.areas.some(a=>a.country===country && a.district===district && a.area===area);
+    const c = normLoc(country), d = normLoc(district), a = normLoc(area);
+    if(!c || !d || !a) return;
+    const exists = state.areas.some(x=>normLoc(x.country)===c && normLoc(x.district)===d && normLoc(x.area)===a);
     if(!exists){
-      state.areas.push({country, district, area});
-      try{ await sb.from('areas').upsert({country, district, area}, {onConflict:'country,district,area'}); }catch(e){ /* best-effort */ }
+      state.areas.push({country:c, district:d, area:a});
+      try{ await sb.from('areas').upsert({country:c, district:d, area:a}, {onConflict:'country,district,area'}); }catch(e){ /* best-effort */ }
     }
   }
 
