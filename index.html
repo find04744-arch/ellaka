@@ -555,6 +555,100 @@
     "দক্ষিণ আফ্রিকা": ["গৌতেং","ক্বাজুলু-নাটাল","ওয়েস্টার্ন কেপ","ইস্টার্ন কেপ","লিম্পোপো","মপুমালাঙ্গা","নর্থ ওয়েস্ট","ফ্রি স্টেট","নর্দার্ন কেপ"]
   };
 
+  // ---------- English display names for the fixed country/district lists ----------
+  // The stored/matched value everywhere (DB rows, filters, the SQL cleanup script)
+  // stays the Bengali canonical string from COUNTRY_OPTIONS / DISTRICTS_BY_COUNTRY —
+  // that's what keeps "no duplicate spellings" working. These two maps are ONLY used
+  // to decide what TEXT to show for that same canonical value when the app's language
+  // is English, so switching to English also translates the country/district lists
+  // (previously the lists stayed in Bengali even in English mode).
+  const COUNTRY_EN = {
+    "বাংলাদেশ": "Bangladesh",
+    "সৌদি আরব": "Saudi Arabia",
+    "সংযুক্ত আরব আমিরাত": "United Arab Emirates",
+    "কাতার": "Qatar",
+    "ওমান": "Oman",
+    "কুয়েত": "Kuwait",
+    "বাহরাইন": "Bahrain",
+    "মালয়েশিয়া": "Malaysia",
+    "সিঙ্গাপুর": "Singapore",
+    "ভারত": "India",
+    "পাকিস্তান": "Pakistan",
+    "শ্রীলঙ্কা": "Sri Lanka",
+    "নেপাল": "Nepal",
+    "মালদ্বীপ": "Maldives",
+    "যুক্তরাজ্য": "United Kingdom",
+    "যুক্তরাষ্ট্র": "United States",
+    "কানাডা": "Canada",
+    "অস্ট্রেলিয়া": "Australia",
+    "ইতালি": "Italy",
+    "জার্মানি": "Germany",
+    "ফ্রান্স": "France",
+    "স্পেন": "Spain",
+    "দক্ষিণ কোরিয়া": "South Korea",
+    "জাপান": "Japan",
+    "জর্ডান": "Jordan",
+    "লেবানন": "Lebanon",
+    "লিবিয়া": "Libya",
+    "ইরাক": "Iraq",
+    "ইরান": "Iran",
+    "মিশর": "Egypt",
+    "দক্ষিণ আফ্রিকা": "South Africa",
+  };
+
+  const DISTRICTS_EN = {
+    "বাংলাদেশ": {"বাগেরহাট": "Bagerhat", "বান্দরবান": "Bandarban", "বরগুনা": "Barguna", "বরিশাল": "Barishal", "ভোলা": "Bhola", "বগুড়া": "Bogura", "ব্রাহ্মণবাড়িয়া": "Brahmanbaria", "চাঁদপুর": "Chandpur", "চাঁপাইনবাবগঞ্জ": "Chapainawabganj", "চট্টগ্রাম": "Chattogram", "চুয়াডাঙ্গা": "Chuadanga", "কুমিল্লা": "Cumilla", "কক্সবাজার": "Cox's Bazar", "ঢাকা": "Dhaka", "দিনাজপুর": "Dinajpur", "ফরিদপুর": "Faridpur", "ফেনী": "Feni", "গাইবান্ধা": "Gaibandha", "গাজীপুর": "Gazipur", "গোপালগঞ্জ": "Gopalganj", "হবিগঞ্জ": "Habiganj", "জামালপুর": "Jamalpur", "যশোর": "Jashore", "ঝালকাঠি": "Jhalokathi", "ঝিনাইদহ": "Jhenaidah", "জয়পুরহাট": "Joypurhat", "খাগড়াছড়ি": "Khagrachhari", "খুলনা": "Khulna", "কিশোরগঞ্জ": "Kishoreganj", "কুড়িগ্রাম": "Kurigram", "কুষ্টিয়া": "Kushtia", "লক্ষ্মীপুর": "Lakshmipur", "লালমনিরহাট": "Lalmonirhat", "মাদারীপুর": "Madaripur", "মাগুরা": "Magura", "মানিকগঞ্জ": "Manikganj", "মেহেরপুর": "Meherpur", "মৌলভীবাজার": "Moulvibazar", "মুন্সিগঞ্জ": "Munshiganj", "ময়মনসিংহ": "Mymensingh", "নওগাঁ": "Naogaon", "নড়াইল": "Narail", "নারায়ণগঞ্জ": "Narayanganj", "নরসিংদী": "Narsingdi", "নাটোর": "Natore", "নেত্রকোনা": "Netrokona", "নীলফামারী": "Nilphamari", "নোয়াখালী": "Noakhali", "পাবনা": "Pabna", "পঞ্চগড়": "Panchagarh", "পটুয়াখালী": "Patuakhali", "পিরোজপুর": "Pirojpur", "রাজবাড়ী": "Rajbari", "রাজশাহী": "Rajshahi", "রাঙ্গামাটি": "Rangamati", "রংপুর": "Rangpur", "সাতক্ষীরা": "Satkhira", "শরীয়তপুর": "Shariatpur", "শেরপুর": "Sherpur", "সিরাজগঞ্জ": "Sirajganj", "সুনামগঞ্জ": "Sunamganj", "সিলেট": "Sylhet", "টাঙ্গাইল": "Tangail", "ঠাকুরগাঁও": "Thakurgaon"},
+    "সৌদি আরব": {"রিয়াদ": "Riyadh", "মক্কা": "Makkah", "মদিনা": "Madinah", "পূর্বাঞ্চলীয় প্রদেশ": "Eastern Province", "আসির": "Asir", "তাবুক": "Tabuk", "হাইল": "Hail", "উত্তর সীমান্ত প্রদেশ": "Northern Borders", "জিজান": "Jazan", "নাজরান": "Najran", "আল-বাহা": "Al Bahah", "আল-জাওফ": "Al Jawf", "আল-কাসিম": "Al Qassim"},
+    "সংযুক্ত আরব আমিরাত": {"আবুধাবি": "Abu Dhabi", "দুবাই": "Dubai", "শারজাহ": "Sharjah", "আজমান": "Ajman", "উম্ম আল-কুওয়াইন": "Umm Al Quwain", "রাস আল খাইমাহ": "Ras Al Khaimah", "ফুজাইরাহ": "Fujairah"},
+    "কাতার": {"দোহা": "Doha", "আল রাইয়ান": "Al Rayyan", "আল ওয়াকরাহ": "Al Wakrah", "আল খোর": "Al Khor", "আল শামাল": "Al Shamal", "আল দাইয়েন": "Al Daayen", "উম্ম সালাল": "Umm Salal", "আল শাহানিয়া": "Al Shahaniya"},
+    "ওমান": {"মাস্কাট": "Muscat", "দোফার": "Dhofar", "মুসান্দাম": "Musandam", "আল বুরাইমি": "Al Buraimi", "আদ দাখিলিয়া": "Ad Dakhiliyah", "উত্তর আল বাতিনাহ": "Al Batinah North", "দক্ষিণ আল বাতিনাহ": "Al Batinah South", "উত্তর আশ শারকিয়া": "Ash Sharqiyah North", "দক্ষিণ আশ শারকিয়া": "Ash Sharqiyah South", "আদ দাহিরাহ": "Ad Dhahirah", "আল ওয়াস্তা": "Al Wusta"},
+    "কুয়েত": {"কুয়েত সিটি (আল আসিমাহ)": "Kuwait City (Al Asimah)", "হাওয়াল্লি": "Hawalli", "ফারওয়ানিয়া": "Farwaniya", "মুবারক আল-কাবির": "Mubarak Al-Kabeer", "আহমাদি": "Ahmadi", "জাহরা": "Jahra"},
+    "বাহরাইন": {"ক্যাপিটাল গভর্নরেট": "Capital Governorate", "মুহাররাক গভর্নরেট": "Muharraq Governorate", "উত্তর গভর্নরেট": "Northern Governorate", "দক্ষিণ গভর্নরেট": "Southern Governorate"},
+    "মালয়েশিয়া": {"জোহর": "Johor", "কেদাহ": "Kedah", "কেলান্তান": "Kelantan", "মালাক্কা": "Malacca", "নেগেরি সেম্বিলান": "Negeri Sembilan", "পাহাং": "Pahang", "পেনাং": "Penang", "পেরাক": "Perak", "পার্লিস": "Perlis", "সাবাহ": "Sabah", "সারাওয়াক": "Sarawak", "সেলাঙ্গর": "Selangor", "তেরেঙ্গানু": "Terengganu", "কুয়ালালামপুর": "Kuala Lumpur", "লাবুয়ান": "Labuan", "পুত্রজায়া": "Putrajaya"},
+    "সিঙ্গাপুর": {"কেন্দ্রীয় অঞ্চল": "Central Region", "পূর্ব অঞ্চল": "East Region", "উত্তর অঞ্চল": "North Region", "উত্তর-পূর্ব অঞ্চল": "North-East Region", "পশ্চিম অঞ্চল": "West Region"},
+    "ভারত": {"অন্ধ্রপ্রদেশ": "Andhra Pradesh", "অরুণাচল প্রদেশ": "Arunachal Pradesh", "আসাম": "Assam", "বিহার": "Bihar", "ছত্তিশগড়": "Chhattisgarh", "গোয়া": "Goa", "গুজরাট": "Gujarat", "হরিয়ানা": "Haryana", "হিমাচল প্রদেশ": "Himachal Pradesh", "ঝাড়খণ্ড": "Jharkhand", "কর্ণাটক": "Karnataka", "কেরালা": "Kerala", "মধ্যপ্রদেশ": "Madhya Pradesh", "মহারাষ্ট্র": "Maharashtra", "মণিপুর": "Manipur", "মেঘালয়": "Meghalaya", "মিজোরাম": "Mizoram", "নাগাল্যান্ড": "Nagaland", "ওড়িশা": "Odisha", "পাঞ্জাব": "Punjab", "রাজস্থান": "Rajasthan", "সিকিম": "Sikkim", "তামিলনাড়ু": "Tamil Nadu", "তেলেঙ্গানা": "Telangana", "ত্রিপুরা": "Tripura", "উত্তরপ্রদেশ": "Uttar Pradesh", "উত্তরাখণ্ড": "Uttarakhand", "পশ্চিমবঙ্গ": "West Bengal", "দিল্লি": "Delhi", "জম্মু ও কাশ্মীর": "Jammu and Kashmir", "লাদাখ": "Ladakh", "পুদুচেরি": "Puducherry", "চণ্ডীগড়": "Chandigarh", "আন্দামান ও নিকোবর দ্বীপপুঞ্জ": "Andaman and Nicobar Islands", "দাদরা ও নগর হাভেলি এবং দমন ও দিউ": "Dadra and Nagar Haveli and Daman and Diu", "লাক্ষাদ্বীপ": "Lakshadweep"},
+    "পাকিস্তান": {"পাঞ্জাব": "Punjab", "সিন্ধু": "Sindh", "খাইবার পাখতুনখোয়া": "Khyber Pakhtunkhwa", "বেলুচিস্তান": "Balochistan", "ইসলামাবাদ রাজধানী অঞ্চল": "Islamabad Capital Territory", "গিলগিত-বালতিস্তান": "Gilgit-Baltistan", "আজাদ কাশ্মীর": "Azad Kashmir"},
+    "শ্রীলঙ্কা": {"পশ্চিম প্রদেশ": "Western Province", "মধ্য প্রদেশ": "Central Province", "দক্ষিণ প্রদেশ": "Southern Province", "উত্তর প্রদেশ": "Northern Province", "পূর্ব প্রদেশ": "Eastern Province", "উত্তর পশ্চিম প্রদেশ": "North Western Province", "উত্তর মধ্য প্রদেশ": "North Central Province", "উভা প্রদেশ": "Uva Province", "সাবারাগামুয়া প্রদেশ": "Sabaragamuwa Province"},
+    "নেপাল": {"কোশী": "Koshi", "মধেশ": "Madhesh", "বাগমতী": "Bagmati", "গন্ডকী": "Gandaki", "লুম্বিনী": "Lumbini", "কর্ণালী": "Karnali", "সুদূরপশ্চিম": "Sudurpashchim"},
+    "মালদ্বীপ": {"হা আলিফ": "Haa Alifu", "হা ধাল": "Haa Dhaalu", "শাভিয়ানি": "Shaviyani", "নূনু": "Noonu", "রাহ": "Raa", "বারাহ": "Baa", "লাভিয়ানি": "Lhaviyani", "কাফু (মালে)": "Kaafu (Male)", "আলিফ আলিফ": "Alifu Alifu", "আলিফ ধাল": "Alifu Dhaalu", "ভাবু": "Vaavu", "মীমু": "Meemu", "ফাফু": "Faafu", "ধাল": "Dhaalu", "থা": "Thaa", "লামু": "Laamu", "গাফু আলিফ": "Gaafu Alifu", "গাফু ধাল": "Gaafu Dhaalu", "গনাভিয়ানি": "Gnaviyani", "সিনু (আড্ডু)": "Seenu (Addu)"},
+    "যুক্তরাজ্য": {"ইংল্যান্ড - লন্ডন": "England - London", "ইংল্যান্ড - দক্ষিণ পূর্ব": "England - South East", "ইংল্যান্ড - দক্ষিণ পশ্চিম": "England - South West", "ইংল্যান্ড - পূর্বাঞ্চল": "England - East of England", "ইংল্যান্ড - ওয়েস্ট মিডল্যান্ডস": "England - West Midlands", "ইংল্যান্ড - ইস্ট মিডল্যান্ডস": "England - East Midlands", "ইংল্যান্ড - ইয়র্কশায়ার ও হাম্বার": "England - Yorkshire and the Humber", "ইংল্যান্ড - উত্তর পূর্ব": "England - North East", "ইংল্যান্ড - উত্তর পশ্চিম": "England - North West", "স্কটল্যান্ড": "Scotland", "ওয়েলস": "Wales", "উত্তর আয়ারল্যান্ড": "Northern Ireland"},
+    "যুক্তরাষ্ট্র": {"আলাবামা": "Alabama", "আলাস্কা": "Alaska", "অ্যারিজোনা": "Arizona", "আরকানসাস": "Arkansas", "ক্যালিফোর্নিয়া": "California", "কলোরাডো": "Colorado", "কানেকটিকাট": "Connecticut", "ডেলাওয়্যার": "Delaware", "ফ্লোরিডা": "Florida", "জর্জিয়া": "Georgia", "হাওয়াই": "Hawaii", "আইডাহো": "Idaho", "ইলিনয়": "Illinois", "ইন্ডিয়ানা": "Indiana", "আইওয়া": "Iowa", "কানসাস": "Kansas", "কেন্টাকি": "Kentucky", "লুইজিয়ানা": "Louisiana", "মেইন": "Maine", "মেরিল্যান্ড": "Maryland", "ম্যাসাচুসেটস": "Massachusetts", "মিশিগান": "Michigan", "মিনেসোটা": "Minnesota", "মিসিসিপি": "Mississippi", "মিসৌরি": "Missouri", "মন্টানা": "Montana", "নেব্রাস্কা": "Nebraska", "নেভাদা": "Nevada", "নিউ হ্যাম্পশায়ার": "New Hampshire", "নিউ জার্সি": "New Jersey", "নিউ মেক্সিকো": "New Mexico", "নিউ ইয়র্ক": "New York", "নর্থ ক্যারোলিনা": "North Carolina", "নর্থ ডাকোটা": "North Dakota", "ওহাইও": "Ohio", "ওকলাহোমা": "Oklahoma", "অরেগন": "Oregon", "পেনসিলভানিয়া": "Pennsylvania", "রোড আইল্যান্ড": "Rhode Island", "সাউথ ক্যারোলিনা": "South Carolina", "সাউথ ডাকোটা": "South Dakota", "টেনেসি": "Tennessee", "টেক্সাস": "Texas", "উটাহ": "Utah", "ভারমন্ট": "Vermont", "ভার্জিনিয়া": "Virginia", "ওয়াশিংটন": "Washington", "ওয়েস্ট ভার্জিনিয়া": "West Virginia", "উইসকনসিন": "Wisconsin", "ওয়াইওমিং": "Wyoming", "ওয়াশিংটন ডিসি": "Washington D.C."},
+    "কানাডা": {"অন্টারিও": "Ontario", "কুইবেক": "Quebec", "ব্রিটিশ কলাম্বিয়া": "British Columbia", "আলবার্টা": "Alberta", "ম্যানিটোবা": "Manitoba", "সাসকাচোয়ান": "Saskatchewan", "নোভা স্কশিয়া": "Nova Scotia", "নিউ ব্রান্সউইক": "New Brunswick", "নিউফাউন্ডল্যান্ড ও ল্যাব্রাডর": "Newfoundland and Labrador", "প্রিন্স এডওয়ার্ড আইল্যান্ড": "Prince Edward Island", "ইউকন": "Yukon", "নর্থওয়েস্ট টেরিটরিজ": "Northwest Territories", "নুনাভুত": "Nunavut"},
+    "অস্ট্রেলিয়া": {"নিউ সাউথ ওয়েলস": "New South Wales", "ভিক্টোরিয়া": "Victoria", "কুইন্সল্যান্ড": "Queensland", "ওয়েস্টার্ন অস্ট্রেলিয়া": "Western Australia", "সাউথ অস্ট্রেলিয়া": "South Australia", "তাসমানিয়া": "Tasmania", "অস্ট্রেলিয়ান ক্যাপিটাল টেরিটরি": "Australian Capital Territory", "নর্দার্ন টেরিটরি": "Northern Territory"},
+    "ইতালি": {"আব্রুৎসো": "Abruzzo", "বাসিলিকাতা": "Basilicata", "কালাব্রিয়া": "Calabria", "কাম্পানিয়া": "Campania", "এমিলিয়া-রোমাগনা": "Emilia-Romagna", "ফ্রিউলি-ভেনেৎসিয়া জুলিয়া": "Friuli-Venezia Giulia", "লাৎসিও": "Lazio", "লিগুরিয়া": "Liguria", "লোম্বার্দি": "Lombardy", "মার্কে": "Marche", "মোলিসে": "Molise", "পিয়েমন্তে": "Piedmont", "পুলিয়া": "Apulia", "সার্দিনিয়া": "Sardinia", "সিসিলি": "Sicily", "তোস্কানা": "Tuscany", "ত্রেন্তিনো-আল্তো আদিজে": "Trentino-Alto Adige", "উম্ব্রিয়া": "Umbria", "ভালে দাওস্তা": "Aosta Valley", "ভেনেতো": "Veneto"},
+    "জার্মানি": {"বাডেন-ভুর্টেমবার্গ": "Baden-Württemberg", "বাভারিয়া": "Bavaria", "বার্লিন": "Berlin", "ব্রান্ডেনবুর্গ": "Brandenburg", "ব্রেমেন": "Bremen", "হামবুর্গ": "Hamburg", "হেসে": "Hesse", "মেক্লেনবুর্গ-ফোরপোমার্ন": "Mecklenburg-Vorpommern", "লোয়ার স্যাক্সনি": "Lower Saxony", "নর্থ রাইন-ওয়েস্টফালিয়া": "North Rhine-Westphalia", "রাইনল্যান্ড-প্যালাটিনেট": "Rhineland-Palatinate", "সারল্যান্ড": "Saarland", "স্যাক্সনি": "Saxony", "স্যাক্সনি-আনহাল্ট": "Saxony-Anhalt", "শ্লেসভিগ-হোলস্টাইন": "Schleswig-Holstein", "থুরিঙ্গিয়া": "Thuringia"},
+    "ফ্রান্স": {"ইল-দ্য-ফ্রান্স": "Île-de-France", "ওভের্ন-রোন-আল্প": "Auvergne-Rhône-Alpes", "বুর্গান্ডি-ফ্রঁশ-কোঁতে": "Bourgogne-Franche-Comté", "ব্রিটানি": "Brittany", "সঁত্র-ভাল দ্য লোয়ার": "Centre-Val de Loire", "করসিকা": "Corsica", "গ্রান্দ এস্ত": "Grand Est", "ও-দ্য-ফ্রান্স": "Hauts-de-France", "নরম্যান্ডি": "Normandy", "নুভেল-অ্যাকিতেন": "Nouvelle-Aquitaine", "অক্সিতানি": "Occitanie", "পে দ্য লা লোয়ার": "Pays de la Loire", "প্রোভঁস-আল্প-কোত দাজুর": "Provence-Alpes-Côte d'Azur", "গুয়াদলুপ": "Guadeloupe", "মার্তিনিক": "Martinique", "ফরাসি গায়ানা": "French Guiana", "রিউনিয়ন": "Réunion", "মায়োত": "Mayotte"},
+    "স্পেন": {"আন্দালুসিয়া": "Andalusia", "আরাগন": "Aragon", "আস্তুরিয়াস": "Asturias", "বেলেআরিক দ্বীপপুঞ্জ": "Balearic Islands", "বাস্ক দেশ": "Basque Country", "ক্যানারি দ্বীপপুঞ্জ": "Canary Islands", "কান্তাব্রিয়া": "Cantabria", "কাস্তিয়া-লা মাঞ্চা": "Castilla-La Mancha", "কাস্তিয়া ই লেওন": "Castile and León", "কাতালোনিয়া": "Catalonia", "এস্ত্রেমাদুরা": "Extremadura", "গ্যালিসিয়া": "Galicia", "লা রিওহা": "La Rioja", "মাদ্রিদ": "Madrid", "মুরসিয়া": "Murcia", "নাভারে": "Navarre", "ভ্যালেন্সিয়া": "Valencia", "সেউতা": "Ceuta", "মেলিয়া": "Melilla"},
+    "দক্ষিণ কোরিয়া": {"সিউল": "Seoul", "বুসান": "Busan", "ইনছন": "Incheon", "দায়েগু": "Daegu", "দায়েজন": "Daejeon", "গোয়াংজু": "Gwangju", "উলসান": "Ulsan", "সেজং": "Sejong", "গিয়ংগি": "Gyeonggi", "গাংওন": "Gangwon", "চুংছেওংবুক": "North Chungcheong", "চুংছেওংনাম": "South Chungcheong", "জলাব্যুক": "North Jeolla", "জলাব্যাম": "South Jeolla", "গিয়ংসাংবুক": "North Gyeongsang", "গিয়ংসাংনাম": "South Gyeongsang", "জেজু": "Jeju"},
+    "জাপান": {"হোক্কাইদো": "Hokkaido", "আওমোরি": "Aomori", "ইওয়াতে": "Iwate", "মিয়াগি": "Miyagi", "আকিতা": "Akita", "ইয়ামাগাতা": "Yamagata", "ফুকুশিমা": "Fukushima", "ইবারাকি": "Ibaraki", "তোচিগি": "Tochigi", "গুনমা": "Gunma", "সাইতামা": "Saitama", "চিবা": "Chiba", "টোকিও": "Tokyo", "কানাগাওয়া": "Kanagawa", "নিগাতা": "Niigata", "তোয়ামা": "Toyama", "ইশিকাওয়া": "Ishikawa", "ফুকুই": "Fukui", "ইয়ামানাশি": "Yamanashi", "নাগানো": "Nagano", "গিফু": "Gifu", "শিজুওকা": "Shizuoka", "আইচি": "Aichi", "মিয়ে": "Mie", "শিগা": "Shiga", "কিয়োতো": "Kyoto", "ওসাকা": "Osaka", "হিয়োগো": "Hyogo", "নারা": "Nara", "ওয়াকায়ামা": "Wakayama", "তোত্তোরি": "Tottori", "শিমানে": "Shimane", "ওকায়ামা": "Okayama", "হিরোশিমা": "Hiroshima", "ইয়ামাগুচি": "Yamaguchi", "তোকুশিমা": "Tokushima", "কাগাওয়া": "Kagawa", "এহিমে": "Ehime", "কোচি": "Kochi", "ফুকুওকা": "Fukuoka", "সাগা": "Saga", "নাগাসাকি": "Nagasaki", "কুমামোতো": "Kumamoto", "ওইতা": "Oita", "মিয়াজাকি": "Miyazaki", "কাগোশিমা": "Kagoshima", "ওকিনাওয়া": "Okinawa"},
+    "জর্ডান": {"আম্মান": "Amman", "ইরবিদ": "Irbid", "জারকা": "Zarqa", "বালকা": "Balqa", "মাদাবা": "Madaba", "কারাক": "Karak", "তাফিলাহ": "Tafilah", "মা'আন": "Ma'an", "আকাবা": "Aqaba", "জারাশ": "Jerash", "আজলুন": "Ajloun", "মাফরাক": "Mafraq"},
+    "লেবানন": {"বৈরুত": "Beirut", "মাউন্ট লেবানন": "Mount Lebanon", "উত্তর লেবানন": "North Lebanon", "আক্কার": "Akkar", "বেকা": "Beqaa", "বালবেক-হারমেল": "Baalbek-Hermel", "দক্ষিণ লেবানন": "South Lebanon", "নাবাতিয়ে": "Nabatieh"},
+    "লিবিয়া": {"ত্রিপোলি": "Tripoli", "বেনগাজি": "Benghazi", "মিসরাতা": "Misrata", "নালুত": "Nalut", "জাফারা": "Jafara", "জাওইয়া": "Zawiya", "সিরত": "Sirte", "জুফরা": "Jufra", "মুরজুক": "Murzuq", "সাবহা": "Sabha", "ওয়াদি আল শাতি": "Wadi al Shatii", "ওয়াদি আল হায়াত": "Wadi al Hayaa", "বুতনান": "Butnan", "দারনা": "Derna", "আল মারজ": "Al Marj", "নুকাত আল খামস": "Nuqat al Khams", "ঘাত": "Ghat", "আল ওয়াহাত": "Al Wahat", "আজদাবিয়া": "Ajdabiya", "আল মুরকুব": "Al Murqub", "আল জাবাল আল আখদার": "Jabal al Akhdar", "আল জাবাল আল গারবি": "Jabal al Gharbi", "কুফরা": "Kufra"},
+    "ইরাক": {"বাগদাদ": "Baghdad", "বসরা": "Basra", "নিনেভে": "Nineveh", "আরবিল": "Erbil", "সুলাইমানিয়া": "Sulaymaniyah", "দুহোক": "Duhok", "কিরকুক": "Kirkuk", "আনবার": "Anbar", "বাবিল": "Babil", "কারবালা": "Karbala", "নাজাফ": "Najaf", "ওয়াসিত": "Wasit", "দিয়ালা": "Diyala", "সালাহ আদ-দিন": "Saladin", "কাদিসিয়া": "Al-Qadisiyyah", "মুথান্না": "Muthanna", "ধি কার": "Dhi Qar", "মায়সান": "Maysan"},
+    "ইরান": {"তেহরান": "Tehran", "ইস্পাহান": "Isfahan", "ফার্স": "Fars", "খোরাসান রাজাভি": "Razavi Khorasan", "খুজেস্তান": "Khuzestan", "পূর্ব আজারবাইজান": "East Azerbaijan", "পশ্চিম আজারবাইজান": "West Azerbaijan", "গিলান": "Gilan", "মাজানদারান": "Mazandaran", "কেরমান": "Kerman", "কেরমানশাহ": "Kermanshah", "হরমোজগান": "Hormozgan", "সিস্তান ও বালুচিস্তান": "Sistan and Baluchestan", "লোরেস্তান": "Lorestan", "মারকাজি": "Markazi", "কোম": "Qom", "কাজভিন": "Qazvin", "গোলেস্তান": "Golestan", "আরদাবিল": "Ardabil", "হামেদান": "Hamadan", "ইয়াজদ": "Yazd", "বুশেহর": "Bushehr", "চাহার মহল ও বাখতিয়ারি": "Chaharmahal and Bakhtiari", "কোহগিলুইয়ে ও বোয়ের আহমাদ": "Kohgiluyeh and Boyer-Ahmad", "ইলাম": "Ilam", "উত্তর খোরাসান": "North Khorasan", "দক্ষিণ খোরাসান": "South Khorasan", "সেমনান": "Semnan", "আলবোর্জ": "Alborz", "জাঞ্জান": "Zanjan", "কুর্দিস্তান": "Kurdistan"},
+    "মিশর": {"কায়রো": "Cairo", "আলেকজান্দ্রিয়া": "Alexandria", "গিজা": "Giza", "দাকাহলিয়া": "Dakahlia", "শারকিয়া": "Sharqia", "কালুবিয়া": "Qalyubia", "কাফর আল-শেখ": "Kafr el-Sheikh", "গারবিয়া": "Gharbia", "মেনুফিয়া": "Monufia", "বেহেইরা": "Beheira", "ইসমাইলিয়া": "Ismailia", "পোর্ট সাইদ": "Port Said", "সুয়েজ": "Suez", "দামিয়েটা": "Damietta", "দক্ষিণ সিনাই": "South Sinai", "উত্তর সিনাই": "North Sinai", "বেনি সুয়েফ": "Beni Suef", "ফাইয়ুম": "Faiyum", "মিনিয়া": "Minya", "আসিউত": "Asyut", "সোহাগ": "Sohag", "কেনা": "Qena", "লুক্সর": "Luxor", "আসওয়ান": "Aswan", "রেড সি": "Red Sea", "নিউ ভ্যালি": "New Valley", "মাতরুহ": "Matrouh"},
+    "দক্ষিণ আফ্রিকা": {"গৌতেং": "Gauteng", "ক্বাজুলু-নাটাল": "KwaZulu-Natal", "ওয়েস্টার্ন কেপ": "Western Cape", "ইস্টার্ন কেপ": "Eastern Cape", "লিম্পোপো": "Limpopo", "মপুমালাঙ্গা": "Mpumalanga", "নর্থ ওয়েস্ট": "North West", "ফ্রি স্টেট": "Free State", "নর্দার্ন কেপ": "Northern Cape"},
+  };
+  function countryLabel(bn){
+    if(state.lang!=='en') return bn;
+    return COUNTRY_EN[bn] || bn;
+  }
+  function districtLabel(districtBn, countryBn){
+    if(state.lang!=='en') return districtBn;
+    const map = countryBn && DISTRICTS_EN[countryBn];
+    if(map && map[districtBn]) return map[districtBn];
+    for(const cn in DISTRICTS_EN){ if(DISTRICTS_EN[cn][districtBn]) return DISTRICTS_EN[cn][districtBn]; }
+    return districtBn;
+  }
+  function districtFilterLabel(districtBn, countryFilterValue){
+    if(countryFilterValue && countryFilterValue !== "সব"){
+      return districtLabel(districtBn, countryFilterValue);
+    }
+    const owner = COUNTRY_OPTIONS.find(cn => DISTRICTS_BY_COUNTRY[cn] && DISTRICTS_BY_COUNTRY[cn].includes(districtBn));
+    if(!owner) return districtBn;
+    return `${districtLabel(districtBn, owner)} (${countryLabel(owner)})`;
+  }
+
 
   // ---------- categories (icon + bilingual label) ----------
   const CATS = {
@@ -1160,6 +1254,8 @@
     return t('generalUserLabel');
   }
 
+  // added: see the guard around the theme/lang localStorage read inside loadAll()
+  let prefsLoaded = false;
   let state = {
     tab:"home", loaded:false, theme:"light", lang:"bn", i18nCache:{}, translating:false,
     session:null, authMode:"login", authError:"", authBusy:false, authInfo:"",
@@ -1458,8 +1554,19 @@
     }catch(e){ state.myRatings={}; }
     // theme/language are just this device's own display preference, not shared
     // marketplace data — plain localStorage (works on any real website) is right for these.
-    try{ state.theme = localStorage.getItem('ellaka_theme') || 'light'; }catch(e){ state.theme='light'; }
-    try{ state.lang = localStorage.getItem('ellaka_lang') || 'bn'; }catch(e){ state.lang='bn'; }
+    // fixed: loadAll() can run more than once in a session (e.g. Supabase's
+    // onAuthStateChange listener can call it again), and re-reading from
+    // localStorage every time was silently reverting the person's in-session
+    // language choice (e.g. English) back to whatever was last saved — which
+    // showed up as the language flipping back to বাংলা when switching tabs.
+    // Now this only ever runs once per page load; after that the in-memory
+    // state.lang/state.theme (set via the language/theme switchers, which
+    // already save to localStorage themselves) is left alone.
+    if(!prefsLoaded){
+      try{ state.theme = localStorage.getItem('ellaka_theme') || 'light'; }catch(e){ state.theme='light'; }
+      try{ state.lang = localStorage.getItem('ellaka_lang') || 'bn'; }catch(e){ state.lang='bn'; }
+      prefsLoaded = true;
+    }
     state.loaded = true; applyTheme(); render();
     if(state.lang!=='bn' && state.lang!=='en'){ await ensureTranslation(state.lang); render(); }
     refreshUnreadCount();
@@ -2071,15 +2178,16 @@
     // the free-type combo above, but there is no "+ type your own" option and
     // the field always stays readonly, so nobody can type a typo/garbage value
     // in here at all. Options always come from a fixed list, not from the DB.
-    function attachFixedPicker(input, listId, options, onPick){
+    function attachFixedPicker(input, listId, options, onPick, labelFor){
       const list = document.getElementById(listId);
       if(!list) return;
+      const label = labelFor || (o=>o);
       input.setAttribute('readonly','readonly');
       function show(filterText){
         const q = (filterText||'').trim().toLowerCase();
-        const filtered = q ? options.filter(o=>o.toLowerCase().includes(q)) : options;
+        const filtered = q ? options.filter(o=>`${o} ${label(o)}`.toLowerCase().includes(q)) : options;
         list.innerHTML = filtered.length
-          ? filtered.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('')
+          ? filtered.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o)}">${escapeHtml(label(o))}</div>`).join('')
           : `<div class="elk-combo-empty">${t('comboNoMatch')}</div>`;
         list.style.display = 'block';
         list.querySelectorAll('.elk-combo-opt[data-value]').forEach(opt=>{
@@ -2105,7 +2213,7 @@
       const country = countryInput.value.trim();
       const fixedList = DISTRICTS_BY_COUNTRY[normLoc(country)];
       if(fixedList){
-        attachFixedPicker(districtInput, `${prefix}-district-list`, fixedList, ()=>{ areaInput.value=''; });
+        attachFixedPicker(districtInput, `${prefix}-district-list`, fixedList, ()=>{ areaInput.value=''; }, d=>districtLabel(d, normLoc(country)));
       } else {
         attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(country||'সব'), ()=>{ areaInput.value=''; });
       }
@@ -2114,7 +2222,7 @@
     attachFixedPicker(countryInput, `${prefix}-country-list`, COUNTRY_OPTIONS, ()=>{
       districtInput.value=''; areaInput.value='';
       rebindDistrict();
-    });
+    }, countryLabel);
     rebindDistrict(); // initial bind for whatever country came pre-filled — never clears the pre-filled district
     attachSuggest(areaInput, `${prefix}-area-list`, ()=>distinctAreas(countryInput.value.trim()||'সব', districtInput.value.trim()||'সব'));
   }
@@ -2452,8 +2560,8 @@
     const locStrip = `
       <div class="elk-location-strip">
         <div class="elk-loc-row">
-          ${filterComboHtml('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), state.countryFilter, t('searchCountryPlaceholder'))}
-          ${filterComboHtml('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), state.districtFilter, t('searchDistrictPlaceholder'))}
+          ${filterComboHtml('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), state.countryFilter, t('searchCountryPlaceholder'))}
+          ${filterComboHtml('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.countryFilter)})), state.districtFilter, t('searchDistrictPlaceholder'))}
         </div>
         <div class="elk-loc-row">
           ${filterComboHtml('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.areaFilter, t('searchAreaPlaceholder'))}
@@ -2595,11 +2703,11 @@
       </div>
       <div class="elk-field" style="margin-top:8px;">
         <label>${t('countryLabel')}</label>
-        ${filterComboHtml('elk-donor-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), state.donorCountryFilter, t('searchCountryPlaceholder'))}
+        ${filterComboHtml('elk-donor-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), state.donorCountryFilter, t('searchCountryPlaceholder'))}
       </div>
       <div class="elk-field">
         <label>${t('districtLabel')}</label>
-        ${filterComboHtml('elk-donor-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), state.donorDistrictFilter, t('searchDistrictPlaceholder'))}
+        ${filterComboHtml('elk-donor-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.donorCountryFilter)})), state.donorDistrictFilter, t('searchDistrictPlaceholder'))}
       </div>
       <div class="elk-field">
         <label>${t('areaLabel')}</label>
@@ -2722,11 +2830,11 @@
       </div>
       <div class="elk-field" style="margin-top:10px;">
         <label>${t('countryLabel')}</label>
-        ${filterComboHtml('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), state.workCountryFilter, t('searchCountryPlaceholder'))}
+        ${filterComboHtml('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), state.workCountryFilter, t('searchCountryPlaceholder'))}
       </div>
       <div class="elk-field">
         <label>${t('districtLabel')}</label>
-        ${filterComboHtml('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), state.workDistrictFilter, t('searchDistrictPlaceholder'))}
+        ${filterComboHtml('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.workCountryFilter)})), state.workDistrictFilter, t('searchDistrictPlaceholder'))}
       </div>
       <div class="elk-field">
         <label>${t('areaAltLabel')}</label>
@@ -3714,8 +3822,8 @@
       const countries = ["সব", ...distinctCountries()];
       const districts = ["সব", ...distinctDistricts(state.countryFilter)];
       const areaOpts = ["সব", ...distinctAreas(state.countryFilter, state.districtFilter)];
-      initFilterCombo('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.countryFilter=val; state.districtFilter='সব'; state.areaFilter='সব'; state.feedRenderCount=30; render(); });
-      initFilterCombo('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.districtFilter=val; state.areaFilter='সব'; state.feedRenderCount=30; render(); });
+      initFilterCombo('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), val=>{ state.countryFilter=val; state.districtFilter='সব'; state.areaFilter='সব'; state.feedRenderCount=30; render(); });
+      initFilterCombo('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.countryFilter)})), val=>{ state.districtFilter=val; state.areaFilter='সব'; state.feedRenderCount=30; render(); });
       initFilterCombo('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.areaFilter=val; render(); });
 
       // manual "search" — applies whatever text is currently typed in the three boxes
@@ -3803,8 +3911,8 @@
       const countries = ["সব", ...distinctCountries()];
       const districts = ["সব", ...distinctDistricts(state.donorCountryFilter)];
       const areaOpts = ["সব", ...distinctAreas(state.donorCountryFilter, state.donorDistrictFilter)];
-      initFilterCombo('elk-donor-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.donorCountryFilter=val; state.donorDistrictFilter='সব'; state.donorAreaFilter='সব'; render(); });
-      initFilterCombo('elk-donor-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.donorDistrictFilter=val; state.donorAreaFilter='সব'; render(); });
+      initFilterCombo('elk-donor-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), val=>{ state.donorCountryFilter=val; state.donorDistrictFilter='সব'; state.donorAreaFilter='সব'; render(); });
+      initFilterCombo('elk-donor-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.donorCountryFilter)})), val=>{ state.donorDistrictFilter=val; state.donorAreaFilter='সব'; render(); });
       initFilterCombo('elk-donor-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.donorAreaFilter=val; render(); });
     }
     const addMyDonorBtn = document.getElementById('elk-add-my-donor-btn');
@@ -3916,8 +4024,8 @@
       const countries = ["সব", ...distinctCountries()];
       const districts = ["সব", ...distinctDistricts(state.workCountryFilter)];
       const areaOpts = ["সব", ...distinctAreas(state.workCountryFilter, state.workDistrictFilter)];
-      initFilterCombo('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):c})), val=>{ state.workCountryFilter=val; state.workDistrictFilter='সব'; state.workAreaFilter='সব'; state.jobRenderCount=30; render(); });
-      initFilterCombo('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):d})), val=>{ state.workDistrictFilter=val; state.workAreaFilter='সব'; state.jobRenderCount=30; render(); });
+      initFilterCombo('elk-jobf-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), val=>{ state.workCountryFilter=val; state.workDistrictFilter='সব'; state.workAreaFilter='সব'; state.jobRenderCount=30; render(); });
+      initFilterCombo('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.workCountryFilter)})), val=>{ state.workDistrictFilter=val; state.workAreaFilter='সব'; state.jobRenderCount=30; render(); });
       initFilterCombo('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), val=>{ state.workAreaFilter=val; state.jobRenderCount=30; render(); });
     }
     document.querySelectorAll('[data-edit-job]').forEach(b=>{ b.onclick = ()=>{ state.editingJobId=b.dataset.editJob; state.workView='form'; render(); }; });
