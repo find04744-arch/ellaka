@@ -96,6 +96,12 @@
   }
   .elk-location-strip .elk-combo-input::placeholder{color:#6b6355;}
   .elk-location-strip .elk-combo-input:focus{outline:none; box-shadow:0 0 0 3px rgba(232,163,61,.35);}
+  /* added: district/area pickers look visibly "locked" (dimmed, no pointer) until
+     their prerequisite is chosen — country must be picked before district, and
+     district before area — so it's never possible to end up browsing a confusing
+     merged list of every country's/district's entries at once. */
+  .elk-combo-input[data-locked="1"]{opacity:.55; cursor:not-allowed;}
+  .elk-combo-input[data-locked="1"]::placeholder{color:inherit; opacity:.9;}
   .elk-field .elk-combo-input{width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:var(--radius-sm); font-size:14.5px; background:var(--panel); color:var(--ink);}
   .elk-field .elk-combo-input:focus{outline:none; border-color:var(--marigold-deep); box-shadow:0 0 0 3px rgba(184,122,30,.14);}
   .elk-combo-input[readonly]{cursor:pointer; caret-color:transparent;}
@@ -704,6 +710,7 @@
       chooseCountry:"সব দেশ নির্বাচন...", allCountriesOpt:"🌍 সব দেশ", allDistrictsOpt:"সব জেলা", allAreasOpt:"সব এলাকা / গ্রাম",
       allCatsChip:"🗂️ সব",
       searchCountryPlaceholder:"দেশের নাম লিখে খুঁজুন...", searchDistrictPlaceholder:"জেলার নাম লিখে খুঁজুন...", searchAreaPlaceholder:"এলাকা/গ্রামের নাম লিখে খুঁজুন...",
+      districtLockedHint:"আগে দেশ বেছে নিন", areaLockedHint:"আগে জেলা/রাজ্য বেছে নিন",
       comboNoMatch:"কিছু পাওয়া যায়নি", copyBtnTitle:"কপি করুন", toastCopied:"✅ কপি হয়েছে",
       emptyNoListings:'এখনো কোনো এন্ট্রি নেই।<br>"আমার ব্যবসা" থেকে নিজের প্রোফাইল যোগ করুন।',
       emptyNoFilterMatch:'এই ফিল্টারে কিছু পাওয়া যায়নি।<br>দেশ/জেলা/এলাকা বা ক্যাটাগরি বদলে দেখুন।',
@@ -958,6 +965,7 @@
       adminLocked:"🔒 Admin", adminOpen:"🔓 Admin", refreshTitle:"Refresh",
       chooseCountry:"Select a country...", allCountriesOpt:"🌍 All countries", allDistrictsOpt:"All districts", allAreasOpt:"All areas / villages",
       searchCountryPlaceholder:"Type to search country...", searchDistrictPlaceholder:"Type to search district...", searchAreaPlaceholder:"Type to search area/village...",
+      districtLockedHint:"Choose a country first", areaLockedHint:"Choose a district/state first",
       comboNoMatch:"No matches found", copyBtnTitle:"Copy", toastCopied:"✅ Copied",
       allCatsChip:"🗂️ All",
       emptyNoListings:'No entries yet.<br>Add your own profile from "My Business".',
@@ -2059,7 +2067,14 @@
     document.querySelectorAll('.elk-combo-list').forEach(l=> l.style.display='none');
   }
   document.addEventListener('click', closeAllCombos);
-  function filterComboHtml(id, options, selectedValue, placeholder){
+  function filterComboHtml(id, options, selectedValue, placeholder, lockedHint){
+    if(lockedHint){
+      return `
+        <div class="elk-combo" data-combo-id="${id}">
+          <input type="text" class="elk-combo-input" id="${id}-input" data-locked="1" autocomplete="off" readonly disabled value="${escapeHtml(lockedHint)}">
+          <div class="elk-combo-list" id="${id}-list" style="display:none;"></div>
+        </div>`;
+    }
     const selectedOpt = options.find(o=>o.value===selectedValue);
     const selectedLabel = selectedOpt ? selectedOpt.label : (options[0] ? options[0].label : '');
     return `
@@ -2072,6 +2087,9 @@
     const input = document.getElementById(`${id}-input`);
     const list = document.getElementById(`${id}-list`);
     if(!input || !list) return;
+    // locked fields (rendered by filterComboHtml with a lockedHint) intentionally
+    // have no options to pick from yet — leave them fully inert, no click handler.
+    if(input.dataset.locked==='1') return;
     function renderList(){
       list.innerHTML = options.length
         ? options.map(o=>`<div class="elk-combo-opt" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</div>`).join('')
@@ -2208,23 +2226,52 @@
     // field's behaviour is re-bound to that country's own list. (The
     // free-type fallback below only kicks in for a country we somehow don't
     // have a fixed list for — a safety net, not the normal path.)
+    // added: mirrors the same "pick in order" rule already used on the
+    // Home/Donor/Work filter dropdowns (see filterComboHtml's lockedHint) —
+    // district stays disabled/greyed out until a country is chosen, and area
+    // stays disabled until a district is chosen. Previously this form let
+    // someone tap district before country (falling back to a merged list of
+    // every country's districts mixed together) — now that's not possible.
+    function syncLocLock(){
+      const hasCountry = !!countryInput.value.trim();
+      districtInput.disabled = !hasCountry;
+      if(!hasCountry){
+        districtInput.setAttribute('data-locked','1');
+        districtInput.placeholder = t('districtLockedHint');
+      } else {
+        districtInput.removeAttribute('data-locked');
+        districtInput.placeholder = t('districtPlaceholder');
+      }
+      const hasDistrict = !!districtInput.value.trim();
+      areaInput.disabled = !hasDistrict;
+      if(!hasDistrict){
+        areaInput.setAttribute('data-locked','1');
+        areaInput.placeholder = t('areaLockedHint');
+      } else {
+        areaInput.removeAttribute('data-locked');
+        areaInput.placeholder = t('areaAltPlaceholder');
+      }
+    }
+
     function rebindDistrict(){
       districtInput.setAttribute('readonly','readonly');
       const country = countryInput.value.trim();
       const fixedList = DISTRICTS_BY_COUNTRY[normLoc(country)];
       if(fixedList){
-        attachFixedPicker(districtInput, `${prefix}-district-list`, fixedList, ()=>{ areaInput.value=''; }, d=>districtLabel(d, normLoc(country)));
+        attachFixedPicker(districtInput, `${prefix}-district-list`, fixedList, ()=>{ areaInput.value=''; syncLocLock(); }, d=>districtLabel(d, normLoc(country)));
       } else {
-        attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(country||'সব'), ()=>{ areaInput.value=''; });
+        attachSuggest(districtInput, `${prefix}-district-list`, ()=>distinctDistricts(country||'সব'), ()=>{ areaInput.value=''; syncLocLock(); });
       }
     }
 
     attachFixedPicker(countryInput, `${prefix}-country-list`, COUNTRY_OPTIONS, ()=>{
       districtInput.value=''; areaInput.value='';
       rebindDistrict();
+      syncLocLock();
     }, countryLabel);
     rebindDistrict(); // initial bind for whatever country came pre-filled — never clears the pre-filled district
     attachSuggest(areaInput, `${prefix}-area-list`, ()=>distinctAreas(countryInput.value.trim()||'সব', districtInput.value.trim()||'সব'));
+    syncLocLock(); // initial lock state — stays unlocked for any pre-filled country/district (editing an existing listing)
   }
   function normLoc(s){ return String(s||'').trim().replace(/\s+/g,' '); }
   async function registerLocation(country, district, area){
@@ -2561,10 +2608,10 @@
       <div class="elk-location-strip">
         <div class="elk-loc-row">
           ${filterComboHtml('elk-country', countries.map(c=>({value:c, label:c==="সব"?t('allCountriesOpt'):countryLabel(c)})), state.countryFilter, t('searchCountryPlaceholder'))}
-          ${filterComboHtml('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.countryFilter)})), state.districtFilter, t('searchDistrictPlaceholder'))}
+          ${filterComboHtml('elk-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.countryFilter)})), state.districtFilter, t('searchDistrictPlaceholder'), state.countryFilter==="সব" ? t('districtLockedHint') : null)}
         </div>
         <div class="elk-loc-row">
-          ${filterComboHtml('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.areaFilter, t('searchAreaPlaceholder'))}
+          ${filterComboHtml('elk-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.areaFilter, t('searchAreaPlaceholder'), state.districtFilter==="সব" ? t('areaLockedHint') : null)}
           <button type="button" class="elk-search-go" id="elk-loc-search-btn" title="${t('searchGo')}">🔍</button>
         </div>
       </div>`;
@@ -2707,11 +2754,11 @@
       </div>
       <div class="elk-field">
         <label>${t('districtLabel')}</label>
-        ${filterComboHtml('elk-donor-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.donorCountryFilter)})), state.donorDistrictFilter, t('searchDistrictPlaceholder'))}
+        ${filterComboHtml('elk-donor-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.donorCountryFilter)})), state.donorDistrictFilter, t('searchDistrictPlaceholder'), state.donorCountryFilter==="সব" ? t('districtLockedHint') : null)}
       </div>
       <div class="elk-field">
         <label>${t('areaLabel')}</label>
-        ${filterComboHtml('elk-donor-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.donorAreaFilter, t('searchAreaPlaceholder'))}
+        ${filterComboHtml('elk-donor-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.donorAreaFilter, t('searchAreaPlaceholder'), state.donorDistrictFilter==="সব" ? t('areaLockedHint') : null)}
       </div>
       ${allDonors.length===0 ? `<div class="elk-empty">${t('emptyNoDonors')}</div>` :
         list.length===0 ? `<div class="elk-empty">${t('emptyNoDonorMatch')}</div>` :
@@ -2834,11 +2881,11 @@
       </div>
       <div class="elk-field">
         <label>${t('districtLabel')}</label>
-        ${filterComboHtml('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.workCountryFilter)})), state.workDistrictFilter, t('searchDistrictPlaceholder'))}
+        ${filterComboHtml('elk-jobf-district', districts.map(d=>({value:d, label:d==="সব"?t('allDistrictsOpt'):districtFilterLabel(d, state.workCountryFilter)})), state.workDistrictFilter, t('searchDistrictPlaceholder'), state.workCountryFilter==="সব" ? t('districtLockedHint') : null)}
       </div>
       <div class="elk-field">
         <label>${t('areaAltLabel')}</label>
-        ${filterComboHtml('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.workAreaFilter, t('searchAreaPlaceholder'))}
+        ${filterComboHtml('elk-jobf-area', areaOpts.map(a=>({value:a, label:a==="সব"?t('allAreasOpt'):a})), state.workAreaFilter, t('searchAreaPlaceholder'), state.workDistrictFilter==="সব" ? t('areaLockedHint') : null)}
       </div>
       ${state.jobs.length===0 ? `<div class="elk-empty" style="margin-top:16px;">${t('noJobs')}</div>` :
         list.length===0 ? `<div class="elk-empty" style="margin-top:16px;">${t('jobsEmptyFilterMsg')}</div>` :
