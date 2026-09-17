@@ -762,8 +762,13 @@
       authDisposableEmailError:"এই ধরনের সাময়িক/ভুয়া ইমেইল (temporary email) দিয়ে একাউন্ট খোলা যাবে না। দয়া করে আপনার real/personal ইমেইল ব্যবহার করুন।",
       authEmailNotConfirmed:"এই ইমেইলটি এখনো কনফার্ম করা হয়নি। ইমেইলে পাঠানো কনফার্মেশন লিংকে ক্লিক করে তারপর আবার লগইন করুন।",
       authResetEmailSent:"ইমেইল পাঠানো হয়েছে — ইনবক্স (স্প্যাম ফোল্ডারও) চেক করুন।",
-      authPasswordUpdated:"পাসওয়ার্ড আপডেট হয়ে গেছে!", authReauthPrompt:"নিশ্চিত করতে আপনার পাসওয়ার্ড লিখুন:",
+      authPasswordUpdated:"পাসওয়ার্ড আপডেট হয়ে গেছে!", authReauthPrompt:"নিশ্চিত করতে আপনার এখনকার পাসওয়ার্ড লিখুন:",
       logoutBtn2:"লগআউট করুন",
+      changePasswordBtn:"🔒 পাসওয়ার্ড পরিবর্তন করুন",
+      newPasswordPrompt:"নতুন পাসওয়ার্ড লিখুন (কমপক্ষে ৬ অক্ষর):",
+      confirmNewPasswordPrompt:"নিশ্চিত করতে নতুন পাসওয়ার্ডটা আবার লিখুন:",
+      passwordMismatch:"দুইবার লেখা পাসওয়ার্ড মিলছে না। আবার চেষ্টা করুন।",
+      authPasswordTooShort:"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।",
       bizTypeLabel:"ব্যবসার ধরন", bizTypePhysical:"🏬 সরাসরি দোকান আছে (ক্রেতা গিয়ে দেখে কিনতে পারবে)",
       bizTypeOnline:"🌐 শুধু অনলাইনে ব্যবসা (কোনো দোকান নেই)",
       bizTypePhysicalService:"🏬 দোকানে/স্পটে গিয়ে সরাসরি সেবা নেওয়া যায়",
@@ -1018,8 +1023,13 @@
       authDisposableEmailError:"Temporary/disposable email addresses can't be used to sign up. Please use a real, personal email.",
       authEmailNotConfirmed:"This email hasn't been confirmed yet. Please click the confirmation link we emailed you, then log in again.",
       authResetEmailSent:"Email sent — check your inbox (and spam folder).",
-      authPasswordUpdated:"Password updated!", authReauthPrompt:"Enter your password to confirm:",
+      authPasswordUpdated:"Password updated!", authReauthPrompt:"Enter your current password to confirm:",
       logoutBtn2:"Log out",
+      changePasswordBtn:"🔒 Change password",
+      newPasswordPrompt:"Enter your new password (at least 6 characters):",
+      confirmNewPasswordPrompt:"Re-enter the new password to confirm:",
+      passwordMismatch:"The two passwords didn't match. Please try again.",
+      authPasswordTooShort:"Password must be at least 6 characters.",
       bizTypeLabel:"Business type", bizTypePhysical:"🏬 Has a physical shop (customers can visit and check products)",
       bizTypeOnline:"🌐 Online-only business (no shop)",
       bizTypePhysicalService:"🏬 Service given in-person at a shop/spot",
@@ -1837,6 +1847,23 @@
     const { error } = await sb.auth.signInWithPassword({ email: state.currentUserEmail, password });
     if(error){ toast(t('authWrongCreds')); return false; }
     return true;
+  }
+
+  // added: change-password flow, Facebook-style — first re-verify the
+  // CURRENT password (reusing reauthenticate() above, which is exactly
+  // "type your password to confirm"), and only if that succeeds, ask for
+  // and save a new one. Nobody can set a new password without first
+  // proving they know the old one.
+  async function changePassword(){
+    if(!(await reauthenticate())) return; // must correctly enter the OLD password first
+    const newPassword = window.prompt(t('newPasswordPrompt'));
+    if(!newPassword) return;
+    if(newPassword.length < 6){ toast(t('authPasswordTooShort')); return; }
+    const confirmPassword = window.prompt(t('confirmNewPasswordPrompt'));
+    if(newPassword !== confirmPassword){ toast(t('passwordMismatch')); return; }
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if(error){ toast(error.message); return; }
+    toast(t('authPasswordUpdated'));
   }
 
   function myListings(){
@@ -3211,6 +3238,7 @@
           <label class="elk-checkbox-row" style="margin-top:14px;"><input type="checkbox" name="hideAll" ${state.myProfileHideAll?'checked':''}> ${t('hideAllToggleLabel')}</label>
           <div class="hint" style="margin-top:2px;">${t('hideAllToggleHint')}</div>
           <button class="elk-submit-btn" type="submit">${t('saveProfileBtn')}</button>
+          <button class="elk-ghost-btn" type="button" id="elk-change-password-btn">${t('changePasswordBtn')}</button>
           <button class="elk-ghost-btn" type="button" id="elk-profile-cancel">${t('closeBtn')}</button>
           <button class="elk-ghost-btn" type="button" id="elk-logout-btn2">${t('logoutBtn2')}</button>
           ${state.myProfileName ? `<button class="elk-ghost-btn" type="button" id="elk-profile-delete" style="color:var(--red); border-color:var(--red);">${t('deleteProfileBtn')}</button>` : ''}
@@ -3748,6 +3776,8 @@
     if(profileCloseX) profileCloseX.onclick = ()=>{ state.modal=null; render(); };
     const logoutBtn2 = document.getElementById('elk-logout-btn2');
     if(logoutBtn2) logoutBtn2.onclick = async ()=>{ if(await reauthenticate()){ state.modal=null; signOut(); } };
+    const changePasswordBtn = document.getElementById('elk-change-password-btn');
+    if(changePasswordBtn) changePasswordBtn.onclick = ()=> changePassword();
     bindCascadingLocation('elk-mp');
     const mpPhotoPickBtn = document.getElementById('elk-mp-photo-pick-btn');
     const mpPhotoFileInput = document.getElementById('elk-mp-photo-file');
